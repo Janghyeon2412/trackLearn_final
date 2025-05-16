@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" type="text/css" href="/css/signup.css">
+</head>
+<body>
+<div class = "container">
+    <h1 class = "logo">TrackLearn</h1>
+    <h2 class = "title">회원가입</h2>
+
+    <form th:action = "@{/signup/step1}" th:object="${userSignupDTO}" method = "post">
+        <div class = "form-group">
+            <label for = "email">이메일 주소</label>
+            <input type="email" id="email" th:field="*{email}" required />
+            <p class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+
+            <p class="error-message" th:if="${emailDuplicate}">이미 사용 중인 이메일입니다</p>
+        </div>
+
+        <div calss = "form-group">
+            <label for = "password">비밀번호</label>
+            <input type ="password" id ="password" th:field="*{password}" required minlength="8" maxlength="16"/>
+            <p class ="error-message" th:if = "${#fields.hasErrors('password')}">비밀번호는 8 ~ 16자를 입력해주세요</p>
+        </div>
+
+        <div class ="from-group">
+
+            <label for = "passwordCheck">비밀번호 확인</label>
+            <input type ="password" id="passwordCheck" name = "passwordCheck" required />
+            <p class ="error-message" th:if = "${passwordMismatch}">비밀번호가 일치하지 않아요</p>
+        </div>
+
+
+        <div class="action-row">
+            <a href="/login" class="link">로그인 하러 가기</a>
+            <button type="submit" class="btn-primary">다음</button>
+        </div>
+
+    </form>
+</div>
+</body>
+</html>

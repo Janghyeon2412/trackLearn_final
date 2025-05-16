@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" type="text/css" href="/css/signup.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="logo">TrackLearn</h1>
+    <h2 class="title">회원가입</h2>
+
+    <form th:action="@{/signup/step2}" th:object="${userSignupDTO}" method="post">
+
+        <input type="hidden" th:field="*{email}" />
+        <input type="hidden" th:field="*{password}" />
+
+
+
+        <div class="form-group horizontal">
+            <label for="nickname">닉네임</label>
+            <div class="nickname-row">
+                <input type="text" id="nickname" name="nickname" th:field="*{nickname}" required />
+                <button type="button" id="checkNickname" class="btn-check" disabled>중복 확인</button>
+
+                <script>
+                    const nicknameInput = document.getElementById('nickname');
+                    const checkBtn = document.getElementById('checkNickname');
+
+                    nicknameInput.addEventListener('input', function () {
+                        const value = nicknameInput.value.trim();
+                        checkBtn.disabled = value.length === 0;
+                    });
+                </script>
+
+            </div>
+        </div>
+
+
+        <div class="input-group">
+            <label for="category"> </label>
+            <select id="category" name="categoryId" required>
+                <option value="" disabled selected>관심 카테고리</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.id}"
+                        th:text="${category.name}">
+                </option>
+            </select>
+            <p class="error-message" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></p>
+        </div>
+
+        <div class="btn-center">
+            <button type="submit" class="btn-primary full-width">회원 가입</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
