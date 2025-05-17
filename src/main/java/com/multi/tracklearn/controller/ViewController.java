@@ -1,6 +1,7 @@
 package com.multi.tracklearn.controller;
 
 import com.multi.tracklearn.domain.Category;
+import com.multi.tracklearn.dto.UserLoginDTO;
 import com.multi.tracklearn.dto.UserSignupDTO;
 import com.multi.tracklearn.service.CategoryService;
 import com.multi.tracklearn.service.UserService;
@@ -67,8 +68,9 @@ public class ViewController {
 
 
     @GetMapping("/login")
-    public String showLogin() {
-        return "login";
+    public String showLoginForm(Model model) {
+        model.addAttribute("userLoginDTO", new UserLoginDTO());  // DTO 넣어줘야 th:field가 인식함
+        return "user/login";
     }
 
 
@@ -87,6 +89,17 @@ public class ViewController {
 
         return "redirect:/login"; // 회원가입 완료 후 로그인 이동
 
+    }
+
+    @PostMapping("/login")
+    public String handleLogin(@ModelAttribute("userLoginDTO") UserLoginDTO loginDTO, BindingResult bindingResult, Model model) {
+        try {
+            userService.login(loginDTO);
+            return "redirect:/main";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("loginError", e.getMessage());
+            return "user/login";
+        }
     }
 
 
