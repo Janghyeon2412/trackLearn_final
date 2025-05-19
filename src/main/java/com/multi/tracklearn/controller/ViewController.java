@@ -1,15 +1,22 @@
 package com.multi.tracklearn.controller;
 
+import com.multi.tracklearn.auth.JwtTokenProvider;
 import com.multi.tracklearn.domain.Category;
+import com.multi.tracklearn.domain.User;
 import com.multi.tracklearn.dto.UserLoginDTO;
 import com.multi.tracklearn.dto.UserSignupDTO;
 import com.multi.tracklearn.service.CategoryService;
 import com.multi.tracklearn.service.UserService;
+import com.multi.tracklearn.service.UserTokenService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @Controller
 @SessionAttributes("userSignupDTO")
@@ -17,10 +24,14 @@ public class ViewController {
 
     private final CategoryService categoryService;
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserTokenService userTokenService;
 
-    public ViewController(CategoryService categoryService, UserService userService) {
+    public ViewController(CategoryService categoryService, UserService userService, JwtTokenProvider jwtTokenProvider, UserTokenService userTokenService) {
         this.categoryService = categoryService;
         this.userService = userService;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userTokenService = userTokenService;
     }
 
     @GetMapping("/signup/step1")
@@ -77,18 +88,26 @@ public class ViewController {
     @PostMapping("/signup/step2")
     public String handleSignupStep2(
 
-            @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO, BindingResult bindingResult, Model model) {
+            @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO, BindingResult bindingResult, Model model, HttpServletResponse response) {
 
         Category category = categoryService.findById(userSignupDTO.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다"));
 
-        System.out.println("step2에서 받은 이메일: " + userSignupDTO.getEmail());
-        System.out.println("step2에서 받은 비번: " + userSignupDTO.getPassword());
+        // 회원가입 처리
+        User user = userService.signup(userSignupDTO);
 
-        userService.signup(userSignupDTO);
+        // 토큰 발급
+        String accessToken = jwtTokenProvider.generateToken(user);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-        return "redirect:/login"; // 회원가입 완료 후 로그인 이동
+        // refresh 토큰 저장
+        userTokenService.saveToken(user, refreshToken, LocalDateTime.now().plusDays(7));
 
+        // 토큰을 JS 에서 사용할 수 있도록 쿠키에 전달
+        response.setHeader("Set-Cookie", "refreshToken=" + refreshToken + "; Path=/; HttpOnly; Max-Age=604800");
+        response.setHeader("Set-Cookie", "accessToken=" + accessToken + "; Path=/; Max-Age=7200");
+
+        return "redirect:/main"; // 바로 메인 페이지로 리다이렉트
     }
 
     @PostMapping("/login")

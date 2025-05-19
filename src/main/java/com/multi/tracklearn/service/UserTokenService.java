@@ -33,8 +33,15 @@ public class UserTokenService {
     }
 
     public UserToken getByRefreshToken(String refreshToken) {
-        return userTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+        UserToken token = userTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("Refresh token not found"));
+
+        if (token.getExpiresDate().isBefore(LocalDateTime.now())) {
+            userTokenRepository.delete(token); // 만료된 토큰 삭제
+            throw new IllegalArgumentException("Refresh token expired");
+        }
+
+        return token;
     }
 
     public void deleteByUserId(Long userId) {
@@ -51,4 +58,6 @@ public class UserTokenService {
 
         return userToken.getUser();
     }
+
+
 }

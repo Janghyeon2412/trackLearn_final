@@ -10,7 +10,7 @@
     <h1 class="logo">TrackLearn</h1>
     <h2 class="title">로그인</h2>
 
-    <form th:action="@{/login}" method="post" th:object="${userLoginDTO}">
+    <form th:action="@{/login}" id="loginForm" th:object="${userLoginDTO}">
     <div class="input-group">
             <label for="email">이메일</label>
             <input type="email" id="email" name="email" th:field="*{email}" required />
@@ -23,7 +23,7 @@
         </div>
 
         <div class="action-row">
-            <label><input type="checkbox" name="autoLogin"> 자동로그인</label>
+            <label><input type="checkbox" id="autoLogin" name="autoLogin"> 자동로그인</label>
         </div>
 
         <div class="btn-center">
@@ -36,5 +36,37 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.querySelector("#loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const autoLogin = document.getElementById("autoLogin").checked;
+
+        const response = await fetch("/users/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (response.ok) {
+            const { accessToken, refreshToken } = await response.json();
+
+            sessionStorage.setItem("accessToken", accessToken);
+            if (autoLogin) {
+                localStorage.setItem("refreshToken", refreshToken);
+            } else {
+                localStorage.removeItem("refreshToken");
+            }
+
+            window.location.href = "/main"; // 메인 페이지로 이동
+        } else {
+            alert("로그인 실패");
+        }
+    });
+</script>
+
 </body>
 </html>

@@ -3,11 +3,13 @@ package com.multi.tracklearn.service;
 import com.multi.tracklearn.auth.JwtTokenProvider;
 import com.multi.tracklearn.domain.Category;
 import com.multi.tracklearn.domain.User;
+import com.multi.tracklearn.domain.UserStatus;
 import com.multi.tracklearn.dto.ResetPasswordChangeDTO;
 import com.multi.tracklearn.dto.UserLoginDTO;
 import com.multi.tracklearn.dto.UserSignupDTO;
 import com.multi.tracklearn.repository.CategoryRepository;
 import com.multi.tracklearn.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -58,8 +61,16 @@ public class UserService {
     }
 
     public User signup(UserSignupDTO request) {
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
+
+        if (!request.getPassword().matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+=-]).{8,16}$")) {
+            throw new IllegalArgumentException("비밀번호는 영문, 숫자, 특수문자를 포함하여 8~16자여야 합니다.");
+        }
+
+        Category category = (request.getCategoryId() != null)
+                ? categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"))
+                : categoryRepository.findByCode("ETC")
+                .orElseThrow(() -> new IllegalStateException("기본 카테고리(ETC)가 DB에 없습니다."));
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -67,6 +78,7 @@ public class UserService {
                 .nickname(request.getNickname())
                 .profileImageUrl(request.getProfileImageUrl())
                 .category(category)
+                .status(UserStatus.ACTIVE)
                 .build();
 
         return userRepository.save(user);
@@ -74,9 +86,33 @@ public class UserService {
 
     public User login(UserLoginDTO request) {
         User user = userRepository.findByEmail(request.getEmail());
-        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+
+        if (user == null) {
+            log.warn("[로그인 실패] 존재하지 않는 이메일: {}", request.getEmail());
             throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
+
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            int failCount = Optional.ofNullable(user.getLoginFailCount()).orElse(0) + 1;
+            user.setLoginFailCount(failCount);
+            userRepository.save(user);
+
+            log.warn("[로그인 실패] 이메일 : {}, 실패 횟수: {}", user.getEmail(), failCount);
+            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다. (" + failCount + "회 실패)");
+        }
+
+        if (user.getStatus() == UserStatus.DELETED) {
+            throw new IllegalArgumentException("탈퇴한 게정입니다.");
+        }
+
+        user.setLoginFailCount(0);
+        userRepository.save(user);
+
+        System.out.println("입력 비번: " + request.getPassword());
+        System.out.println("DB 비번: " + user.getPassword());
+        System.out.println("matches? " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
+
+
         return user;
     }
 
@@ -100,6 +136,7 @@ public class UserService {
         }
         userTokenService.deleteByUserId(user.getId());
 
+        user.setStatus(UserStatus.DELETED);
         userRepository.delete(user);
     }
 

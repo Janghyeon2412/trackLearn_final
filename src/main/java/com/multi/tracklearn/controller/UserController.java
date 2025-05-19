@@ -87,9 +87,14 @@ public class UserController {
     }
 
     @GetMapping("/check-nickname")
-    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
-        boolean isAvailable = !userService.existsByEmail(nickname);
-        return ResponseEntity.ok(isAvailable);
+    public ResponseEntity<Map<String, Object>> checkNickname(@RequestParam String nickname) {
+        boolean isAvailable = !userService.existsByNickname(nickname);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("isAvailable", isAvailable);
+        response.put("message", isAvailable ? "Nickname is available" : "Nickname is already taken");
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password/request")
@@ -126,6 +131,7 @@ public class UserController {
             String newAccessToken = jwtTokenProvider.generateToken(user);
 
             return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Refresh token expired. Please login again"));

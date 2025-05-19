@@ -34,6 +34,19 @@ public class User {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    // 추가
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    // 추가(탈퇴한 게정 구분)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status;
+
+    // 추가 (로그인 실패 횟수)
+    @Column(name = "login_fail_count")
+    private Integer loginFailCount = 0;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
