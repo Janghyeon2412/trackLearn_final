@@ -10,7 +10,8 @@
     <h1 class="logo">TrackLearn</h1>
     <h2 class="title">로그인</h2>
 
-    <form th:action="@{/login}" id="loginForm" th:object="${userLoginDTO}">
+    <form id="loginForm" th:object="${userLoginDTO}" action="javascript:void(0);">
+
     <div class="input-group">
             <label for="email">이메일</label>
             <input type="email" id="email" name="email" th:field="*{email}" required />
@@ -38,33 +39,72 @@
 </div>
 
 <script>
-    document.querySelector("#loginForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
+    console.log("스크립트 로드됨");
 
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-        const autoLogin = document.getElementById("autoLogin").checked;
 
-        const response = await fetch("/users/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOMContentLoaded 발생");
 
-        if (response.ok) {
-            const { accessToken, refreshToken } = await response.json();
+        const form = document.querySelector("#loginForm");
+        if (!form) {
+            console.error("폼 요소 못 찾음");
+            return;
+        }
 
-            sessionStorage.setItem("accessToken", accessToken);
-            if (autoLogin) {
-                localStorage.setItem("refreshToken", refreshToken);
-            } else {
-                localStorage.removeItem("refreshToken");
+        console.log("폼 요소 찾음");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault(); // ← 이거 반드시 제일 위에 있어야 함
+            console.log("submit 발생");
+
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const autoLogin = document.getElementById("autoLogin").checked;
+
+            if (!email || !password) {
+                console.warn("이메일 또는 비밀번호가 비어 있음");
+                return;
             }
 
-            window.location.href = "/main"; // 메인 페이지로 이동
-        } else {
-            alert("로그인 실패");
-        }
+            try {
+                const response = await fetch("/users/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                console.log("요청 응답 코드:", response.status);
+
+                if (response.ok) {
+                    const { accessToken, refreshToken } = await response.json();
+                    sessionStorage.setItem("accessToken", accessToken);
+                    if (autoLogin) {
+                        localStorage.setItem("refreshToken", refreshToken);
+                    } else {
+                        localStorage.removeItem("refreshToken");
+                    }
+
+                    const checkMain = await fetch("/main", {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${accessToken}`
+                        }
+                    });
+
+                    if (checkMain.ok) {
+                        window.location.href = "/main";
+                    } else {
+                        alert("메인페이지 접근 실패 (토큰 인증 실패)");
+                    }
+                } else {
+                    alert("로그인 실패");
+                }
+            } catch (err) {
+                console.error("요청 중 에러 발생:", err);
+                alert("서버 오류 발생");
+            }
+        });
     });
 </script>
 

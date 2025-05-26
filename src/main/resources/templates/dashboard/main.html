@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>메인페이지</title>
+  <script defer src="/js/dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/header.css">
+
+</head>
+
+<body>
+<header th:replace="fragments/header :: header"></header>
+
+<main>
+  <!-- 오늘의 목표 표시 영역 -->
+  <section>
+    <h3>오늘의 목표</h3>
+    <div id="today-goals" class="goal-list"></div>
+  </section>
+
+
+
+  <!-- 주간 통계 -->
+  <section id="weekly-stats">
+    <h2>주간 학습 통계</h2>
+    <canvas id="weekly-chart"></canvas>
+    <div id="stat-summary"></div>
+  </section>
+
+
+  <!-- GPT 요약 피드백 -->
+  <section id="gpt-feedback">
+    <h2>GPT 요약 피드백</h2>
+    <ul id="feedback-list"></ul>
+  </section>
+
+
+  <!-- 다음 일정 -->
+  <section id="next-schedule">
+    <h2>다가오는 일정</h2>
+    <div id="schedule-cards"></div>
+  </section>
+
+  <script src="/js/dashboard.js"></script>
+</main>
+
+<footer>
+  <p>TrackLearn © All rights reserved</p>
+
+</footer>
+</body>
+</html>

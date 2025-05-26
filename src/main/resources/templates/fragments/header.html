@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Header</title>
+    <link rel="stylesheet" href="/css/header.css">
+</head>
+<body>
+<header th:fragment="header">
+    <div class="top-bar">
+        <div class="logo">TrackLearn</div>
+        <div class="user-area">
+            <span class="welcome" th:text="${nickname} + ' 님, 안녕하세요!'">홍길동 님, 안녕하세요!</span>
+            <a href="/mypage">마이페이지</a>
+            <a href="/settings">설정</a>
+            <a href="/notifications">알림</a>
+            <a href="/logout">로그아웃</a>
+        </div>
+    </div>
+
+    <div class="menu-container">
+        <nav class="main-menu">
+            <ul class="menu-bar">
+                <li class="menu-item">대시보드</li>
+                <li class="menu-item">일정 관리</li>
+                <li class="menu-item">일지</li>
+                <li class="menu-item">목표 관리</li>
+                <li class="menu-item">통계</li>
+            </ul>
+            <div class="mega-menu">
+                <div class="submenu-column">
+                    <a href="/main">메인페이지</a>
+                </div>
+                <div class="submenu-column">
+                    <a href="/schedule">다음 일정</a>
+                </div>
+                <div class="submenu-column">
+                    <a href="/diary/write">일지 작성</a>
+                    <a href="/diary/history">작성 내역</a>
+                </div>
+                <div class="submenu-column">
+                    <a href="/goals/create">목표 설정</a>
+                    <a href="/goals/status">목표 현황</a>
+                </div>
+                <div class="submenu-column">
+                    <a href="/stats">주간 통계</a>
+                    <a href="/stats/satisfaction">만족도 분석</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>목표 설정</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/goal.css">
+  <link rel="stylesheet" href="/css/header.css">
+</head>
+
+
+
+<body>
+<header th:replace="fragments/header :: header"></header>
+
+<main>
+  <section class="goal-form-container">
+    <h2>학습 목표를 설정해보세요!</h2>
+    <p style="color: #888; font-size: 0.9rem; margin-top: -10px">
+      목표는 일일 단위로 설정되며, 일지 작성 시 자동으로 연동됩니다.
+    </p>
+
+    <form th:action="@{/goals/create}" th:object="${goalCreateDTO}" method="post">
+      <!-- 수정 모드일 때만 goalId 쓰도록 -->
+      <input type="hidden" id="repeatValueHidden" name="repeatValue" th:field="*{repeatValue}" />
+      <input type="hidden" th:field="*{createdValue}" id="createdValue" />
+
+
+      <!-- 날짜 자동 생성 -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <label for="title" style="margin-bottom: 0;">목표</label>
+        <span id="displayDate" class="small-gray-text"></span>
+      </div>
+
+      <input type="text" th:field="*{title}" id="title" placeholder="목표를 입력하세요" required />
+
+      <label>반복 설정</label>
+      <div class="repeat-options">
+        <label><input type="radio" th:field="*{repeatType}" value="DAILY" checked> 매일</label>
+        <label><input type="radio" th:field="*{repeatType}" value="WEEKLY"> 주 3회</label>
+        <label><input type="radio" th:field="*{repeatType}" value="CUSTOM"> 사용자 지정</label>
+      </div>
+
+      <div id="repeatValueInput" style="display: none;">
+        <label for="repeatValue">반복 횟수</label>
+        <input type="text" id="repeatValue" />
+      </div>
+
+      <label>카테고리</label>
+      <select id="category" th:field="*{categoryId}" required>
+        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+      </select>
+
+      <button type="submit" class="button save-btn">저장</button>
+    </form>
+  </section>
+
+
+  <section class="goal-list-wrapper">
+    <div id="goal-list-container">
+      <div th:each="goal, iterStat : ${goals}"
+           th:class="'goal-card color-' + ${iterStat.index % 3}"
+           th:style="${goal.isCompleted} ? 'opacity: 0.5;' : ''"
+           th:attr="data-id=${goal.id},
+                    data-title=${goal.title},
+                    data-repeattype=${goal.repeatType},
+                    data-repeatvalue=${goal.repeatValue},
+                    data-categoryid=${goal.categoryId},
+                    data-completed=${goal.isCompleted}">
+
+
+        <div class="goal-header">
+          <div class="goal-left">
+            <div class="goal-title" th:text="${goal.title}"></div>
+            <div class="goal-meta">
+              <span th:text="${goal.createdValue}"></span>
+              <span th:if="${goal.repeatType == 'DAILY'}"> · 반복: 매일</span>
+              <span th:if="${goal.repeatType == 'WEEKLY'}"> · 반복: 주 3회</span>
+              <span th:if="${goal.repeatType == 'CUSTOM'}" th:text="' · 반복: 주 ' + ${goal.repeatValue} + '회'"></span>
+            </div>
+          </div>
+          <div class="goal-category" th:text="${goal.categoryName}"></div>
+        </div>
+
+        <div class="goal-percent" th:text="${goal.progress + '%'}"></div>
+        <div class="progress-bar">
+          <div class="progress" th:style="'width:' + ${goal.progress} + '%' "></div>
+        </div>
+        <div class="goal-actions">
+          <button class="button edit-btn" th:disabled="${goal.isCompleted}">수정</button>
+          <button class="button delete-btn" th:text="${goal.isCompleted} ? '종료됨' : '종료'" th:disabled="${goal.isCompleted}">종료</button>
+          <button class="button remove-btn">삭제</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="load-more-wrapper">
+    <button id="loadMore" class="button load-more">이전 목표 더보기</button>
+  </div>
+</main>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 날짜 자동 설정
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('createdValue').value = today;
+    document.getElementById('displayDate').innerText = today;
+
+    // 반복 타입에 따라 반복횟수 입력칸 표시
+    const repeatRadios = document.querySelectorAll('input[name="repeatType"]');
+    const repeatInput = document.getElementById('repeatValueInput');
+    const repeatValueField = document.getElementById("repeatValueHidden");
+
+    repeatRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.value === "CUSTOM" && radio.checked) {
+          repeatInput.style.display = 'block';
+          repeatValueField.value = "";
+        } else if (radio.checked) {
+          repeatInput.style.display = 'none';
+          repeatValueField.value = radio.value === "WEEKLY" ? "3" : "ALL";
+        }
+      });
+
+      if (radio.checked) {
+        radio.dispatchEvent(new Event("change"));
+      }
+    });
+
+    const customRepeat = document.getElementById('repeatValue');
+    if (customRepeat) {
+      customRepeat.addEventListener('input', () => {
+        repeatValueField.value = customRepeat.value;
+      });
+    }
+
+    // 수정 버튼 클릭 시 폼에 값 채우기
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('edit-btn')) {
+        const goalCard = e.target.closest('.goal-card');
+
+        const id = goalCard.getAttribute("data-id");
+        const title = goalCard.getAttribute("data-title");
+        const repeatType = goalCard.getAttribute("data-repeattype");
+        const repeatValue = goalCard.getAttribute("data-repeatvalue");
+        const categoryId = goalCard.getAttribute("data-categoryid");
+
+        document.querySelector("#title").value = title;
+        document.querySelector(`input[name='repeatType'][value='${repeatType}']`).checked = true;
+
+        const repeatInputBlock = document.querySelector("#repeatValueInput");
+        const repeatValueHidden = document.querySelector("#repeatValueHidden");
+        const repeatValueVisible = document.querySelector("#repeatValue");
+
+        if (repeatType === "CUSTOM") {
+          repeatInputBlock.style.display = "block";
+          repeatValueVisible.value = repeatValue;
+          repeatValueHidden.value = repeatValue;
+        } else {
+          repeatInputBlock.style.display = "none";
+          repeatValueHidden.value = repeatType === "WEEKLY" ? "3" : "ALL";
+        }
+
+        document.querySelector("#category").value = categoryId;
+
+        let goalIdInput = document.querySelector("input[name='goalId']");
+        if (!goalIdInput) {
+          goalIdInput = document.createElement("input");
+          goalIdInput.type = "hidden";
+          goalIdInput.name = "goalId";
+          goalIdInput.id = "goalId";
+          document.querySelector("form").appendChild(goalIdInput);
+        }
+        goalIdInput.value = id;
+      }
+    });
+
+    // 종료 처리
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('delete-btn')) {
+        const goalCard = e.target.closest('.goal-card');
+        const goalId = goalCard.getAttribute('data-id');
+
+        fetch(`/api/goals/${goalId}/complete`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' }
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('종료 실패');
+                  return response.text();
+                })
+                .then(() => {
+                  e.target.disabled = true;
+                  e.target.innerText = '종료됨';
+                  goalCard.style.opacity = '0.5';
+                  const editBtn = goalCard.querySelector('.edit-btn');
+                  if (editBtn) editBtn.disabled = true;
+                  goalCard.setAttribute('data-completed', 'true');
+                })
+                .catch(err => {
+                  alert('종료 처리 실패: ' + err.message);
+                });
+      }
+    });
+
+    // ✅ 삭제 처리 추가
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('remove-btn')) {
+        const goalCard = e.target.closest('.goal-card');
+        const goalId = goalCard.getAttribute('data-id');
+
+        if (confirm('정말 삭제하시겠습니까?')) {
+          fetch(`/api/goals/${goalId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          })
+                  .then(response => {
+                    if (!response.ok) throw new Error('삭제 실패');
+                    return response.text();
+                  })
+                  .then(() => {
+                    goalCard.remove();
+                  })
+                  .catch(err => {
+                    alert('삭제 실패: ' + err.message);
+                  });
+        }
+      }
+    });
+
+    // ✅ 더보기 + 간소화 통합 처리
+    let lastGoalId = null;
+    let isLoading = false;
+    const loadBtn = document.getElementById('loadMore');
+
+    function simplifyGoalList() {
+      const allGoals = document.querySelectorAll('.goal-card');
+      allGoals.forEach((card, index) => {
+        if (index >= 5) card.remove();
+      });
+      loadBtn.innerText = '이전 목표 더보기';
+      lastGoalId = null;
+    }
+
+    loadBtn.addEventListener('click', async function () {
+      if (loadBtn.innerText === '목록 간소화하기') {
+        simplifyGoalList();
+        return;
+      }
+
+      if (isLoading) return;
+      isLoading = true;
+
+      try {
+        const response = await fetch(`/api/goals/list?cursor=${lastGoalId ?? ''}`);
+        const data = await response.json();
+
+        data.forEach(goal => {
+          if (document.querySelector(`.goal-card[data-id="${goal.id}"]`)) return;
+
+          const div = document.createElement('div');
+          div.className = 'goal-card';
+          div.setAttribute('data-id', goal.id);
+          div.setAttribute('data-title', goal.title);
+          div.setAttribute('data-repeattype', goal.repeatType);
+          div.setAttribute('data-repeatvalue', goal.repeatValue);
+          div.setAttribute('data-categoryid', goal.categoryId);
+          div.setAttribute('data-completed', goal.isCompleted);
+
+          div.innerHTML = `
+            <div class="goal-header">
+              <div class="goal-left">
+                <div class="goal-title">${goal.title}</div>
+                <div class="goal-meta">
+                  <span>${goal.createdValue}</span>
+                  <span>${
+                  goal.repeatType === 'DAILY' ? ' · 반복: 매일' :
+                          goal.repeatType === 'WEEKLY' ? ' · 반복: 주 3회' :
+                                  ` · 반복: 주 ${goal.repeatValue}회`
+          }</span>
+                </div>
+              </div>
+              <div class="goal-category">${goal.categoryName}</div>
+            </div>
+            <div class="goal-percent">${goal.progress}%</div>
+            <div class="progress-bar">
+              <div class="progress" style="width:${goal.progress}%;"></div>
+            </div>
+            <div class="goal-actions">
+              <button class="button edit-btn" ${goal.isCompleted ? 'disabled' : ''}>수정</button>
+              <button class="button delete-btn" ${goal.isCompleted ? 'disabled' : ''}>
+                ${goal.isCompleted ? '종료됨' : '종료'}
+              </button>
+              <button class="button remove-btn" ${goal.isCompleted ? 'disabled' : ''}>삭제</button>
+            </div>
+          `;
+          document.getElementById('goal-list-container').appendChild(div);
+        });
+
+        if (data.length > 0) {
+          lastGoalId = data[data.length - 1].id;
+        }
+
+        if (data.length < 5) {
+          loadBtn.innerText = '목록 간소화하기';
+        }
+
+      } catch (error) {
+        console.error('목표 더보기 실패:', error);
+      }
+
+      isLoading = false;
+    });
+  });
+</script>
+
+</body>
+</html>

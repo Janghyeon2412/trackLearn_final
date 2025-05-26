@@ -1,14 +1,12 @@
 package com.multi.tracklearn.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Builder
 @Entity
 @Table(name = "goal")
 @Getter
@@ -41,6 +39,17 @@ public class Goal {
 
     private Boolean isCompleted = false;
 
+    
+    //추가
+    @Column(nullable = false)
+    private Boolean deleted = false;
+
+
+    @Column(nullable = false)
+    private int progress = 0;
+
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -61,13 +70,50 @@ public class Goal {
         this.modifiedPerson = "system";
     }
 
+    @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
         this.modifiedPerson = "system";
     }
 
+    public void markComplete() {
+        this.isCompleted = true;
+        this.onUpdate();
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+
     public enum RepeatType {
         DAILY, WEEKLY, CUSTOM
     }
+
+    public void updateGoal(String title, RepeatType repeatType, String repeatValue, Category category) {
+        this.title = title;
+        this.repeatType = repeatType;
+        this.repeatValue = repeatValue;
+        this.category = category;
+        this.onUpdate();
+    }
+
+    public void complete() {
+        this.isCompleted = true;
+        this.onUpdate();
+    }
+
+    public void softDelete() {
+        this.deleted = true;
+        this.onUpdate();
+    }
+
+
+    // Goal 엔티티 내부에 수동 추가
+    public void updateProgress(int progress) {
+        this.progress = progress;
+        this.onUpdate();
+    }
+
 
 }

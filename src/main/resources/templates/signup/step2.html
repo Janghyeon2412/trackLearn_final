@@ -11,34 +11,23 @@
     <h2 class="title">회원가입</h2>
 
     <form th:action="@{/signup/step2}" th:object="${userSignupDTO}" method="post">
-
         <input type="hidden" th:field="*{email}" />
         <input type="hidden" th:field="*{password}" />
 
-
-
-        <div class="form-group horizontal">
+        <div class="input-group">
             <label for="nickname">닉네임</label>
-            <div class="nickname-row">
-                <input type="text" id="nickname" name="nickname" th:field="*{nickname}" required />
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="nickname" name="nickname" th:field="*{nickname}" required style="flex: 1;" />
                 <button type="button" id="checkNickname" class="btn-check" disabled>중복 확인</button>
-
-                <script>
-                    const nicknameInput = document.getElementById('nickname');
-                    const checkBtn = document.getElementById('checkNickname');
-
-                    nicknameInput.addEventListener('input', function () {
-                        const value = nicknameInput.value.trim();
-                        checkBtn.disabled = value.length === 0;
-                    });
-                </script>
-
             </div>
+            <!-- 중복 에러 메시지 -->
+            <p id="nicknameError" class="error-message" style="display:none; color: red; margin-top: 4px;"></p>
+            <!-- Spring Validation 에러 메시지 -->
+            <p class="error-message" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></p>
         </div>
 
-
         <div class="input-group">
-            <label for="category"> </label>
+            <label for="category">관심 카테고리</label>
             <select id="category" name="categoryId" required>
                 <option value="" disabled selected>관심 카테고리</option>
                 <option th:each="category : ${categories}"
@@ -54,5 +43,51 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const nicknameInput = document.getElementById("nickname");
+        const checkBtn = document.getElementById("checkNickname");
+        const nicknameError = document.getElementById("nicknameError");
+
+        nicknameInput.addEventListener("input", function () {
+            const value = nicknameInput.value.trim();
+            checkBtn.disabled = value.length === 0;
+
+            nicknameError.textContent = '';
+            nicknameError.style.display = "none";
+            nicknameError.style.color = "red";
+        });
+
+        checkBtn.addEventListener("click", async function () {
+            const nickname = nicknameInput.value.trim();
+            if (!nickname) {
+                nicknameError.textContent = "닉네임을 입력해주세요.";
+                nicknameError.style.display = "block";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/users/check-nickname?nickname=${encodeURIComponent(nickname)}`);
+                const isDuplicate = await response.json();
+
+
+                if (isDuplicate) {
+                    nicknameError.textContent = "이미 사용 중인 닉네임입니다.";
+                    nicknameError.style.color = "red";
+                } else {
+                    nicknameError.textContent = "사용 가능한 닉네임입니다.";
+                    nicknameError.style.color = "green";
+                }
+
+                nicknameError.style.display = "block";
+            } catch (err) {
+                nicknameError.textContent = "서버 오류 발생.";
+                nicknameError.style.color = "red";
+                nicknameError.style.display = "block";
+            }
+        });
+    });
+</script>
 </body>
 </html>

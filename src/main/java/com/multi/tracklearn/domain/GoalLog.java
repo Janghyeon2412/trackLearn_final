@@ -1,12 +1,12 @@
 package com.multi.tracklearn.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Builder
 @Entity
 @Getter
 @Setter
@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(columnNames = {"goal_id", "user_id", "date"})
         }
 )
+@NoArgsConstructor
+@AllArgsConstructor
 public class GoalLog {
 
     @Id
@@ -32,7 +34,10 @@ public class GoalLog {
 
     private LocalDate date;
 
-    private boolean isChecked = false;
+    @Column(name = "is_checked", nullable = false, columnDefinition = "TINYINT(1)")
+    private Boolean isChecked = false;
+
+
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -46,6 +51,15 @@ public class GoalLog {
     @Column(length = 50)
     private String modifiedPerson;
 
+    public static GoalLog of(Goal goal, LocalDate date) {
+        return GoalLog.builder()
+                .goal(goal)
+                .user(goal.getUser())
+                .date(date)
+                .isChecked(false)
+                .build();
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -58,4 +72,11 @@ public class GoalLog {
         this.updatedAt = LocalDateTime.now();
         this.modifiedPerson = "system";
     }
+
+
+    public void markChecked() {
+        this.isChecked = true;
+        this.onUpdate();
+    }
+
 }

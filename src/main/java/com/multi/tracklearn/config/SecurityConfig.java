@@ -2,6 +2,7 @@ package com.multi.tracklearn.config;
 
 import com.multi.tracklearn.auth.JwtAuthenticationFilter;
 import com.multi.tracklearn.auth.JwtTokenProvider;
+import com.multi.tracklearn.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,9 +16,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class  SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -42,13 +45,19 @@ public class  SecurityConfig {
                         "/users/check-nickname",
                         "/users/refresh",
                         "/users/reset-password/**",
-                        "/categories"
+                        "/categories",
+                        "/diary/write"
                 ).permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/users/me").hasRole("USER")// 삭제
-                        .requestMatchers(HttpMethod.GET, "/users/me").hasRole("USER") // 조회
-                .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/users/me").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/users/me").hasRole("USER")
+                                .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_USER")
+                                .requestMatchers("/main").authenticated()
+                                .requestMatchers("/goals/**").authenticated()
+                                .requestMatchers("/diary/write").authenticated()
+
+                                .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userRepository), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

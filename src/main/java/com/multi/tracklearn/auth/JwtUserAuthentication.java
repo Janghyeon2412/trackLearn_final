@@ -11,8 +11,13 @@ public class JwtUserAuthentication extends AbstractAuthenticationToken {
 
     public JwtUserAuthentication(String email) {
         super(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+
         this.email = email;
         setAuthenticated(true);
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     @Override

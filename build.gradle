@@ -29,6 +29,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    implementation 'org.glassfish:jakarta.el:4.0.2'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+
     implementation 'org.springframework.security:spring-security-config:6.4.5'
     implementation 'org.springframework.security:spring-security-web:6.4.5'
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'

@@ -29,6 +29,9 @@ public class Diary {
     @Column(length = 100, nullable = false)
     private String title;
 
+    @Column(length = 100)
+    private String summary;
+
     @Lob
     private String content;
 

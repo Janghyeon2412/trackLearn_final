@@ -8,11 +8,17 @@ import com.multi.tracklearn.dto.UserLoginDTO;
 import com.multi.tracklearn.dto.UserSignupDTO;
 import com.multi.tracklearn.service.UserService;
 import com.multi.tracklearn.service.UserTokenService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -36,7 +42,7 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody UserSignupDTO userSignupDTO) {
+    public ResponseEntity<String> signup(@Valid @RequestBody UserSignupDTO userSignupDTO) {
         if (userService.existsByEmail(userSignupDTO.getEmail())) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
@@ -45,24 +51,58 @@ public class UserController {
         return ResponseEntity.ok("User created");
     }
 
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
+        boolean isDuplicate = userService.existsByNickname(nickname);
+        return ResponseEntity.ok(isDuplicate);
+    }
+
+
+
+
+
     // 로그인 (토큰)
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseEntity<Map<String, String>> login(
+            @RequestBody @Valid UserLoginDTO userLoginDTO,
+            BindingResult bindingResult,
+            HttpServletResponse response // ✅ 추가
+    ) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+            return ResponseEntity.badRequest().body(errors);
+        }
+
         try {
             User user = userService.login(userLoginDTO);
 
             String accessToken = jwtTokenProvider.generateToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // 리프레시 토큰 저장
+            // ✅ 리프레시 토큰 저장
             LocalDateTime refreshTokenExpiry = LocalDateTime.now().plusDays(7);
             userTokenService.saveToken(user, refreshToken, refreshTokenExpiry);
 
-            Map<String, String> response = new HashMap<>();
-            response.put("accessToken", accessToken);
-            response.put("refreshToken", refreshToken);
+            // ✅ accessToken 쿠키 저장
+            Cookie accessCookie = new Cookie("accessToken", accessToken);
+            accessCookie.setHttpOnly(true);
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge(60 * 60 * 2); // 2시간
+            response.addCookie(accessCookie);
 
-            return ResponseEntity.ok(response);
+            // ✅ refreshToken 쿠키 저장
+            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
+            response.addCookie(refreshCookie);
+
+            // ✅ response body에 토큰 포함도 가능
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", accessToken,
+                    "refreshToken", refreshToken
+            ));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -84,17 +124,6 @@ public class UserController {
 
         userService.deleteByEmail(email);
         return ResponseEntity.ok("User deleted");
-    }
-
-    @GetMapping("/check-nickname")
-    public ResponseEntity<Map<String, Object>> checkNickname(@RequestParam String nickname) {
-        boolean isAvailable = !userService.existsByNickname(nickname);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("isAvailable", isAvailable);
-        response.put("message", isAvailable ? "Nickname is available" : "Nickname is already taken");
-
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password/request")

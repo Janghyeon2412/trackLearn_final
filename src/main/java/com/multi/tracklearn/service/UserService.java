@@ -124,6 +124,9 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
+
+
+
     public Optional<User> findByEmail(String email) {
         return Optional.ofNullable(userRepository.findByEmail(email));
     }
@@ -141,8 +144,13 @@ public class UserService {
     }
 
     public boolean existsByNickname(String nickname) {
-        return userRepository.existsByEmail(nickname);
+        return userRepository.findByNickname(nickname)
+                .filter(user -> user.getStatus() != UserStatus.DELETED)
+                .isPresent();
     }
+
+
+
 
     public void sendResetPasswordEmail(String email) {
         User user = userRepository.findByEmail(email);
@@ -187,4 +195,16 @@ public class UserService {
         return jwtTokenProvider.generateToken(user);
 
     }
+
+    public Optional<User> findOptionalByEmail(String email) {
+        return userRepository.findOptionalByEmail(email);
+    }
+
+
+    public String findNicknameByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        return user != null ? user.getNickname() : "사용자";
+    }
+
+
 }

@@ -8,15 +8,20 @@ import com.multi.tracklearn.dto.UserSignupDTO;
 import com.multi.tracklearn.service.CategoryService;
 import com.multi.tracklearn.service.UserService;
 import com.multi.tracklearn.service.UserTokenService;
+import com.multi.tracklearn.validation.ValidStep1;
+import com.multi.tracklearn.validation.ValidStep2;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Controller
 @SessionAttributes("userSignupDTO")
@@ -42,33 +47,30 @@ public class ViewController {
 
     @PostMapping("/signup/step1")
     public String handleSignupStep1(
-            @Valid @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO,
-            @RequestParam("passwordCheck") String passwordCheck,
+            @Validated(ValidStep1.class) @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO,
             BindingResult bindingResult,
+            @RequestParam("passwordCheck") String passwordCheck,
             Model model) {
 
-        // 1. 먼저 기본 유효성 검사 (@Email, @Size 등) 에러부터 체크
         if (bindingResult.hasErrors()) {
+            bindingResult.getAllErrors().forEach(System.out::println);
             return "signup/step1";
         }
 
-        // 이메일 중복 체크
+
         if (userService.existsByEmail(userSignupDTO.getEmail())) {
             model.addAttribute("emailDuplicate", true);
             return "signup/step1";
         }
 
-        // 2. 비밀번호 일치 여부 체크
         if (!userSignupDTO.getPassword().equals(passwordCheck)) {
             model.addAttribute("passwordMismatch", true);
             return "signup/step1";
         }
 
-
-
-        // 3. 모든 검증 통과 시
         return "redirect:/signup/step2";
     }
+
 
 
     @GetMapping("/signup/step2")
@@ -76,6 +78,7 @@ public class ViewController {
         model.addAttribute("categories", categoryService.findAll());
         return "signup/step2";
     }
+
 
 
     @GetMapping("/login")
@@ -87,8 +90,15 @@ public class ViewController {
 
     @PostMapping("/signup/step2")
     public String handleSignupStep2(
+            @Validated(ValidStep2.class) @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO,
+            BindingResult bindingResult,
+            Model model,
+            HttpServletResponse response) {
 
-            @ModelAttribute("userSignupDTO") UserSignupDTO userSignupDTO, BindingResult bindingResult, Model model, HttpServletResponse response) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("categories", categoryService.findAll());
+            return "signup/step2";
+        }
 
         Category category = categoryService.findById(userSignupDTO.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다"));
@@ -111,15 +121,64 @@ public class ViewController {
     }
 
     @PostMapping("/login")
-    public String handleLogin(@ModelAttribute("userLoginDTO") UserLoginDTO loginDTO, BindingResult bindingResult, Model model) {
+    public String handleLogin(
+            @Valid @ModelAttribute("userLoginDTO") UserLoginDTO loginDTO,
+            BindingResult bindingResult,
+            Model model,
+            HttpServletResponse response) {
+
+        if (bindingResult.hasErrors()) {
+            return "user/login";
+        }
+
         try {
-            userService.login(loginDTO);
+            User user = userService.login(loginDTO);
+
+            String accessToken = jwtTokenProvider.generateToken(user);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+            userTokenService.saveToken(user, refreshToken, LocalDateTime.now().plusDays(7));
+
+            response.setHeader("Set-Cookie", "refreshToken=" + refreshToken + "; Path=/; HttpOnly; Max-Age=604800");
+            response.setHeader("Set-Cookie", "accessToken=" + accessToken + "; Path=/; Max-Age=7200");
+
             return "redirect:/main";
         } catch (IllegalArgumentException e) {
             model.addAttribute("loginError", e.getMessage());
             return "user/login";
         }
     }
+
+
+
+    @GetMapping("/main")
+    public String showMainPage(@AuthenticationPrincipal String email, Model model) {
+        if (email == null || email.isBlank()) {
+            return "redirect:/login";
+        }
+
+        Optional<User> optionalUser = userService.findOptionalByEmail(email);
+        if (!optionalUser.isPresent()) {
+            return "redirect:/login"; // 또는 에러 페이지로
+        }
+
+        User user = optionalUser.get();
+        model.addAttribute("nickname", user.getNickname());
+
+        return "dashboard/main";
+    }
+
+
+    @GetMapping("/test")
+    public String testPage() {
+        return "test";
+    }
+
+    @GetMapping("/diary/write")
+    public String diaryWritePage() {
+        return "diary/write";
+    }
+
 
 
 }
