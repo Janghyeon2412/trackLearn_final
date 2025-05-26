@@ -43,5 +43,11 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
 
     int countByGoalAndIsCheckedIsTrue(Goal goal);
 
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.date = :date AND gl.isChecked = false AND gl.goal.deleted = false")
+    List<GoalLog> findByDateAndIsCheckedFalse(LocalDate date);
+
+    boolean existsByGoalAndDate(Goal goal, LocalDate date);
+
+
 
 }
