@@ -49,5 +49,19 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
     boolean existsByGoalAndDate(Goal goal, LocalDate date);
 
 
+    List<GoalLog> findByUserAndDateBetween(User user, LocalDate start, LocalDate end);
+
+
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.user = :user AND gl.date BETWEEN :start AND :end AND gl.goal.deleted = false AND gl.goal.isCompleted = false")
+    List<GoalLog> findActiveByUserAndDateBetween(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+
+    // 만약 goalLog.date가 date 타입이면 LocalDate 사용
+    @Query("SELECT g FROM GoalLog g WHERE g.date = :date AND g.user.id = :userId AND g.goal.deleted = false")
+    List<GoalLog> findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
+
+
+    @Query("SELECT gl FROM GoalLog gl JOIN gl.goal g JOIN Diary d ON gl.id IN elements(d.goalLogIds) WHERE d.id = :diaryId")
+    List<GoalLog> findByDiaryId(@Param("diaryId") Long diaryId);
 
 }

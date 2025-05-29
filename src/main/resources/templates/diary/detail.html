@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>일지 상세보기</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/diary-detail.css">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="diary-container">
+    <section class="form-section">
+        <h2>일지 상세보기</h2>
+
+        <!-- 제목 + 날짜 + 즐겨찾기 -->
+        <div class="diary-detail-top-bar">
+            <div class="diary-detail-title-block">
+                <h3 th:text="${diary.title}">제목</h3>
+                <span th:text="${diary.date}" class="date-label">날짜</span>
+            </div>
+            <img th:src="@{${diary.favorite} ? '/images/star-full.png' : '/images/star-empty.png'}"
+                 alt="즐겨찾기"
+                 class="diary-detail-favorite-icon" />
+        </div>
+
+        <div class="info-row">
+            <!-- 공부 시간 -->
+            <div>
+                <label>공부 시간</label>
+                <p th:text="|${diary.studyTime}분|"></p>
+            </div>
+
+            <!-- 만족도 (label + 별점 수평 정렬) -->
+            <div class="diary-detail-satisfaction-row">
+                <label class="satisfaction-label">만족도</label>
+                <div class="diary-detail-star-rating">
+                    <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                        <img th:src="@{${i <= diary.satisfactionInt} ? '/images/star-full.png' : '/images/star-empty.png'}"
+                             alt="별점" class="diary-detail-rating-star"/>
+                    </th:block>
+                </div>
+            </div>
+
+
+        </div>
+
+
+        <!-- 내용 -->
+        <div class="section">
+            <label>내용</label>
+            <div class="content-box" th:utext="${#strings.replace(diary.content, '\n', '<br/>')}"></div>
+        </div>
+
+        <!-- 목표 및 회고 -->
+        <div class="section" th:each="goalTitle, iter : ${diary.goalTitles}">
+            <h4 th:text="'오늘의 목표 ' + ${iter.index + 1} + ': ' + ${goalTitle}"></h4>
+
+            <!-- ✅ null 및 인덱스 체크 조건 필수 -->
+            <div class="retrospective-box diary-retrospective"
+                 th:if="${diary.retrospectives != null and diary.retrospectives.size() > iter.index}"
+                 th:utext="${#strings.replace(diary.retrospectives[iter.index], '\n', '<br/>')}">
+            </div>
+        </div>
+
+
+
+
+        <!-- 뒤로가기 버튼 -->
+        <div class="btn-wrap" style="margin-top: 2rem;">
+            <a href="/diary/list" class="back-btn">목록으로</a>
+        </div>
+
+    </section>
+</main>
+</body>
+</html>

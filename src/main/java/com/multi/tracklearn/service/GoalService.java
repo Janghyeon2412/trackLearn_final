@@ -4,10 +4,7 @@ import com.multi.tracklearn.domain.Category;
 import com.multi.tracklearn.domain.Goal;
 import com.multi.tracklearn.domain.GoalLog;
 import com.multi.tracklearn.domain.User;
-import com.multi.tracklearn.dto.GoalCreateDTO;
-import com.multi.tracklearn.dto.GoalListDTO;
-import com.multi.tracklearn.dto.GoalUpdateDTO;
-import com.multi.tracklearn.dto.TodayGoalDTO;
+import com.multi.tracklearn.dto.*;
 import com.multi.tracklearn.repository.CategoryRepository;
 import com.multi.tracklearn.repository.GoalLogRepository;
 import com.multi.tracklearn.repository.GoalRepository;
@@ -38,16 +35,6 @@ public class GoalService {
         User user = userRepository.findByEmail(email);
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
 
-        // 주 3회 고정 요일 설정
-        String repeatType = goalCreateDTO.getRepeatType();
-        String repeatValue = goalCreateDTO.getRepeatValue();
-
-        if ("주 3회".equals(repeatType) ||
-                ("WEEKLY".equalsIgnoreCase(repeatType) && ("3".equals(repeatValue) || "주 3회".equals(repeatValue)))) {
-            goalCreateDTO.setRepeatType("WEEKLY");
-            goalCreateDTO.setRepeatValue("MONDAY,WEDNESDAY,FRIDAY");
-        }
-
 
         Category category = categoryRepository.findById(goalCreateDTO.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
@@ -70,60 +57,70 @@ public class GoalService {
 
     }
 
+    private List<Integer> getCustomRepeatOffsets(int repeat) {
+        return switch (repeat) {
+            case 1 -> List.of(0);
+            case 2 -> List.of(0, 3);
+            case 3 -> List.of(0, 3, 6);
+            case 4 -> List.of(0, 2, 4, 6);
+            case 5 -> List.of(0, 1, 3, 4, 6);
+            case 6 -> List.of(0, 1, 2, 4, 5, 6);
+            default -> throw new IllegalArgumentException("지원하지 않는 반복 횟수입니다: " + repeat);
+        };
+    }
+
+
+
     private void generateGoalLogs(Goal goal, User user) {
         LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(6);
-
         List<GoalLog> logs = new ArrayList<>();
 
         if (goal.getRepeatType() == Goal.RepeatType.CUSTOM) {
-            int repeatCount = Integer.parseInt(goal.getRepeatValue());
+            int repeat = Integer.parseInt(goal.getRepeatValue());
+            List<Integer> offsets = getCustomRepeatOffsets(repeat);
 
-            List<LocalDate> weekDates = new ArrayList<>();
-            for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
-                weekDates.add(d);
+            for (int offset : offsets) {
+                logs.add(new GoalLog(null, goal, user, start.plusDays(offset), false, null, null, null, null));
             }
 
-            repeatCount = Math.min(repeatCount, weekDates.size());
+        } else if (goal.getRepeatType() == Goal.RepeatType.WEEKLY) {
 
-            double interval = (double) (weekDates.size() - 1) / (repeatCount - 1);
-
-            Set<LocalDate> selectedDates = new TreeSet<>();
-            for (int i = 0; i < repeatCount; i++) {
-                int index = (int) Math.round(i * interval);
-                selectedDates.add(weekDates.get(index));
-            }
-
-            for (LocalDate d : selectedDates) {
-                logs.add(new GoalLog(null, goal, user, d, false, null, null, null, null));
-            }
-        } else {
-            for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-                boolean include = false;
-
-                switch (goal.getRepeatType()) {
-                    case DAILY:
-                        include = true;
-                        break;
-
-                    case WEEKLY:
-                        List<String> repeatDays = Arrays.stream(goal.getRepeatValue().split(","))
-                                .map(String::trim)
-                                .map(String::toUpperCase)
-                                .toList();
-                        DayOfWeek currentDay = date.getDayOfWeek();
-                        include = repeatDays.contains(currentDay.name());
-                        break;
+            // ✅ 숫자면 → 주 N회 방식으로 처리 (실제 CUSTOM과 동일한 날짜 분포)
+            if (goal.getRepeatValue().matches("\\d+")) {
+                int repeat = Integer.parseInt(goal.getRepeatValue());
+                List<Integer> offsets = getCustomRepeatOffsets(repeat);
+                for (int offset : offsets) {
+                    LocalDate d = start.plusDays(offset);
+                    if (!d.isAfter(start.plusDays(6))) {
+                        logs.add(new GoalLog(null, goal, user, d, false, null, null, null, null));
+                    }
                 }
+            } else {
+                // 기존 요일 기반 처리
+                LocalDate end = start.plusDays(6);
+                List<String> repeatDays = Arrays.stream(goal.getRepeatValue().split(","))
+                        .map(String::trim)
+                        .map(String::toUpperCase)
+                        .toList();
 
-                if (include) {
-                    logs.add(new GoalLog(null, goal, user, date, false, null, null, null, null));
+                for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+                    DayOfWeek currentDay = date.getDayOfWeek();
+                    if (repeatDays.contains(currentDay.name())) {
+                        logs.add(new GoalLog(null, goal, user, date, false, null, null, null, null));
+                    }
                 }
+            }
+
+        } else if (goal.getRepeatType() == Goal.RepeatType.DAILY) {
+            for (int i = 0; i < 7; i++) {
+                logs.add(new GoalLog(null, goal, user, start.plusDays(i), false, null, null, null, null));
             }
         }
 
         goalLogRepository.saveAll(logs);
     }
+
+
 
 
 
@@ -223,28 +220,26 @@ public class GoalService {
                     logs.add(GoalLog.of(goal, start.plusDays(i)));
                 }
             }
+
             case WEEKLY -> {
-                // 고정된 주 3회 날짜: 0, 3, 6 → 월수금 느낌
-                int[] offsets = {0, 3, 6};
+                int[] offsets = {0, 3, 6}; // 월수금 느낌
                 for (int offset : offsets) {
                     logs.add(GoalLog.of(goal, start.plusDays(offset)));
                 }
             }
+
             case CUSTOM -> {
                 int repeat = Integer.parseInt(goal.getRepeatValue());
-                if (repeat == 1) {
-                    logs.add(GoalLog.of(goal, start)); // 오늘만
-                } else {
-                    for (int i = 0; i < repeat; i++) {
-                        int offset = i * 6 / (repeat - 1); // 0~6 범위 균등 분포
-                        logs.add(GoalLog.of(goal, start.plusDays(offset)));
-                    }
+                List<Integer> offsets = getCustomRepeatOffsets(repeat);
+                for (int offset : offsets) {
+                    logs.add(GoalLog.of(goal, start.plusDays(offset)));
                 }
             }
         }
 
         goalLogRepository.saveAll(logs);
     }
+
 
 
 
@@ -387,5 +382,25 @@ public class GoalService {
 
         goal.softDelete();  // isDeleted = true 로 설정됨
     }
+
+    @Transactional(readOnly = true)
+    public List<CalendarGoalDTO> getCalendarGoals(String email, LocalDate startDate, LocalDate endDate) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        List<GoalLog> logs = goalLogRepository.findActiveByUserAndDateBetween(user, startDate, endDate);
+
+        return logs.stream()
+                .map(log -> new CalendarGoalDTO(
+                        log.getId(),  // goalLogId
+                        log.getGoal().getTitle(),
+                        log.getDate(),
+                        log.getIsChecked(),
+                        log.getGoal().getCreatedValue(),
+                        log.getGoal().getCreatedValue().plusDays(7) // ← 원하는 기준으로 조정
+                ))
+                .collect(Collectors.toList());
+    }
+
 
 }

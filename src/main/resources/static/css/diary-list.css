@@ -1,0 +1,199 @@
+.diary-list-container {
+    max-width: 960px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+    font-family: 'Pretendard', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 90vh;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    min-height: 960px;
+}
+
+.diary-card {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #fff;
+}
+
+
+.card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+
+.diary-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.diary-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.diary-title-rating {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.diary-date {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+
+.diary-title-wrap {
+    margin-top: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.diary-title {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #333;
+}
+
+.diary-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.favorite-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    z-index: 2; /* 혹시 다른 요소에 가려지면 추가 */
+}
+
+.diary-summary {
+    font-size: 0.95rem;
+    color: #444;
+    margin-top: 0.5rem;
+    overflow-y: auto;
+    font-weight: 500;
+}
+
+.diary-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-edit,
+.btn-detail {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #ff6b35;
+    color: white;
+}
+
+.btn-edit:hover,
+.btn-detail:hover {
+    background-color: #e85c24;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.pagination button {
+    margin: 0 4px;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.pagination .active {
+    background-color: #ff6b35;
+    color: white;
+}
+
+.rating-star {
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    vertical-align: middle;
+}
+
+.favorite-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.empty-card {
+    visibility: hidden;
+    height: 300px;
+}
+
+
+.diary-content {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #444;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6; /* ← 이 줄 추가 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.4rem;
+}
+
+
+
+.edit-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #ff6b35;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #e85c24;
+}

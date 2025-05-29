@@ -1,17 +1,18 @@
 package com.multi.tracklearn.controller;
 
-import com.multi.tracklearn.dto.LatestFeedbackDTO;
-import com.multi.tracklearn.dto.NextScheduleDTO;
-import com.multi.tracklearn.dto.TodayGoalDTO;
-import com.multi.tracklearn.dto.WeeklyStatsDTO;
+import com.multi.tracklearn.dto.*;
 import com.multi.tracklearn.service.DashboardService;
+import com.multi.tracklearn.service.GoalService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -20,6 +21,7 @@ import java.util.List;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final GoalService goalService;
 
     @GetMapping("/today-goals")
     public  ResponseEntity<List<TodayGoalDTO>> getTodayGoals(@AuthenticationPrincipal String email) {
@@ -59,4 +61,20 @@ public class DashboardController {
         List<NextScheduleDTO> result = dashboardService.getNextSchedule(email);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<CalendarGoalDTO>> getCalendarGoals(
+            @AuthenticationPrincipal String email,
+            @RequestParam("start") String start,
+            @RequestParam("end") String end
+    ) {
+        // 날짜만 잘라서 LocalDate로 변환
+        LocalDate startDate = LocalDate.parse(start.substring(0, 10));
+        LocalDate endDate = LocalDate.parse(end.substring(0, 10));
+
+        List<CalendarGoalDTO> goals = goalService.getCalendarGoals(email, startDate, endDate);
+        return ResponseEntity.ok(goals);
+    }
+
+
 }

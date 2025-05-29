@@ -5,8 +5,10 @@ import com.multi.tracklearn.domain.Goal;
 import com.multi.tracklearn.domain.User;
 
 import com.multi.tracklearn.dto.*;
+import com.multi.tracklearn.repository.DiaryRepository;
 import com.multi.tracklearn.repository.GoalRepository;
 import com.multi.tracklearn.service.CategoryService;
+import com.multi.tracklearn.service.DiaryService;
 import com.multi.tracklearn.service.GoalService;
 import com.multi.tracklearn.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class GoalController {
     private final CategoryService categoryService;
     private final UserService userService;
     private final GoalRepository goalRepository;
+    private final DiaryService diaryService;
 
 
     @PostMapping
@@ -119,6 +122,15 @@ public class GoalController {
         return ResponseEntity.ok(result);
     }
 
+
+    @GetMapping("/edit")
+    public String editGoalForm(@RequestParam("goalLogId") Long goalLogId,
+                               @AuthenticationPrincipal String email,
+                               Model model) {
+        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, email);
+        model.addAttribute("editDTO", dto);
+        return "goal-edit"; // ← 수정화면 HTML 경로
+    }
 
 
 }

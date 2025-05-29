@@ -171,3 +171,7 @@ textarea {
     color: #aaa;
     pointer-events: none;
 }
+
+.diary-retrospective {
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+}

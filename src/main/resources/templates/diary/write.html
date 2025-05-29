@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>일지 작성</title>
@@ -14,8 +14,15 @@
     <section class="form-section">
         <h2>일지 작성</h2>
 
-        <label for="title">제목</label>
-        <input type="text" id="title" placeholder="일지 제목을 입력하세요" required />
+        <!-- 제목 + 오늘 날짜 -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="title">제목</label>
+            <span id="today-date" style="font-size: 0.95rem; color: #888;"></span>
+        </div>
+
+        <!-- 제목 입력창은 그 아래 따로 -->
+        <input type="text" id="title" placeholder="일지 제목을 입력하세요" required maxlength="100" />
+
 
         <!-- 공부 시간 입력 -->
         <div class="time-satisfaction-row">
@@ -39,33 +46,18 @@
             </div>
         </div>
 
-
-
         <label for="content">내용</label>
         <div class="textarea-wrapper">
             <textarea id="content" rows="12" placeholder="학습한 내용을 작성하세요" required></textarea>
             <div id="char-count">(0자)</div>
         </div>
 
-
-
         <h3>오늘의 목표</h3>
         <p style="color: #888; font-size: 0.9rem; margin-top: -10px">
             각 목표에 대한 간단한 회고를 남겨보세요! (선택사항, 30자 이내)
         </p>
         <div id="goal-checkbox-list" class="goal-list">
-            <!-- 여기 안에 목표 1개당 회고 입력칸 추가 -->
-            <div th:each="goal, iterStat : ${todayGoals}" class="goal-item">
-                <label>
-                    <input type="checkbox" name="completedGoalIds" th:value="${goal.id}">
-                    <span th:text="${goal.title} + ' (' + goal.categoryName + ')'"></span>
-                </label>
-
-                <!-- 🆕 회고 입력란 (같은 index로 배열 전송됨) -->
-                <input type="text" name="retrospectives"
-                       class="retrospective-input"
-                       placeholder="이 목표에 대한 회고를 입력하세요">
-            </div>
+            <!-- JS로 오늘의 목표 렌더링 -->
         </div>
 
         <div class="btn-wrap">

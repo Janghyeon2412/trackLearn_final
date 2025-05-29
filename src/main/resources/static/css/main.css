@@ -188,3 +188,60 @@ footer {
     color: #aaa;
     margin-top: 4px;
 }
+
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.write-diary-button {
+    background-color: #ff6b35;
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease;
+}
+
+.write-diary-button:hover {
+    background-color: #e85c24;
+}
+
+.goal-btn-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.goal-write-button {
+    background-color: #ff6b35;
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.goal-write-button:hover {
+    background-color: #e35823;
+}
+
+.fc-event.completed {
+    background-color: #A0AEC0 !important;
+    border: none !important;
+    text-decoration: line-through;
+    color: white !important;
+}
+
+.fc-event.unchecked {
+    background-color: #ff6b35 !important;
+    border: none !important;
+    color: white !important;
+}

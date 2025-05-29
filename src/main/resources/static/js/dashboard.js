@@ -3,7 +3,65 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWeeklyStats();
     fetchLatestFeedbacks();
     fetchNextSchedule();
+    renderCalendar();
 });
+
+function renderCalendar() {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ko',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+        },
+        events: async function (info, successCallback, failureCallback) {
+            try {
+                const res = await fetch(`/api/dashboard/calendar?start=${info.startStr}&end=${info.endStr}`);
+                const data = await res.json();
+
+                const events = data.map(log => ({
+                    id: log.goalId,
+                    title: log.title,
+                    start: log.date,
+                    url: log.checked
+                        ? `/diary/view?goalLogId=${log.goalLogId}`
+                        : `/diary/write?goalLogId=${log.goalLogId}`,
+                    className: log.checked ? 'completed' : 'unchecked',
+                    extendedProps: {
+                        startDate: log.startDate,
+                        endDate: log.endDate
+                    }
+                }));
+
+                successCallback(events);
+            } catch (err) {
+                console.error('캘린더 이벤트 로딩 실패', err);
+                failureCallback(err);
+            }
+        },
+
+        eventDidMount: function(info) {
+            const start = info.event.extendedProps.startDate;
+            const end = info.event.extendedProps.endDate;
+            const tooltip = `${info.event.title} (${start} ~ ${end})`;
+
+            info.el.setAttribute("title", tooltip);
+        },
+
+        eventClick: function (info) {
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+            }
+        }
+    });
+
+    calendar.render();
+}
+
 
 
 function fetchTodayGoals() {
@@ -199,5 +257,8 @@ function renderScheduleCards(schedules) {
 
         container.appendChild(card);
     });
+
+
+
 
 }

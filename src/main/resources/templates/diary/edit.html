@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>일지 수정</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/diary-write.css">
+    <script defer src="/js/diary-write.js"></script>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+
+<main class="diary-container">
+    <section class="form-section">
+        <h2>일지 수정</h2>
+
+        <!-- ✅ Hidden input for JS 사용 -->
+        <input type="hidden" id="diaryId" th:value="${diaryEdit.diaryId}" />
+        <input type="hidden" id="goalLogId" th:value="${diaryEdit.goalLogId}" />
+        <input type="hidden" id="editMode" value="true" />
+
+        <!-- 제목 + 날짜 -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="title">제목</label>
+            <span th:text="${diaryEdit.date}" style="font-size: 0.95rem; color: #888;"></span>
+        </div>
+        <input type="text" id="title" placeholder="일지 제목을 입력하세요" th:value="${diaryEdit.title}" required />
+
+        <!-- 공부 시간 -->
+        <div class="time-satisfaction-row">
+            <div class="study-time">
+                <label>공부 시간</label>
+                <input type="text" id="studyHour" maxlength="2" th:value="${diaryEdit.studyTime / 60}" /> 시간
+                <input type="text" id="studyMinute" maxlength="2" th:value="${diaryEdit.studyTime % 60}" /> 분
+            </div>
+            <div class="satisfaction-block">
+                <label>만족도</label>
+                <div class="star-rating">
+                    <span data-value="1"></span>
+                    <span data-value="2"></span>
+                    <span data-value="3"></span>
+                    <span data-value="4"></span>
+                    <span data-value="5"></span>
+                </div>
+                <input type="hidden" id="satisfaction" name="satisfaction" th:value="${diaryEdit.satisfaction}" />
+            </div>
+        </div>
+
+        <!-- 내용 -->
+        <label for="content">내용</label>
+        <div class="textarea-wrapper">
+            <textarea id="content" rows="12" placeholder="학습한 내용을 작성하세요" required
+                      th:text="${diaryEdit.content}"></textarea>
+            <div id="char-count">(0자)</div>
+        </div>
+
+        <!-- 목표 제목 + 회고 여러 개 표시 -->
+        <div th:each="retrospective, iterStat : ${diaryEdit.retrospectives}">
+            <h3 th:text="'오늘의 목표 ' + ${iterStat.index + 1} + ': ' + ${diaryEdit.goalTitles[iterStat.index]}"></h3>
+            <label th:for="'retrospective' + ${iterStat.index}">회고</label>
+            <textarea th:id="'retrospective' + ${iterStat.index}"
+                      th:name="'retrospectiveList'"
+                      th:attr="placeholder='이 목표에 대한 회고를 입력하세요'"
+                      th:text="${retrospective}"></textarea>
+
+        </div>
+
+
+
+
+        <!-- 저장 버튼 -->
+        <div class="btn-wrap">
+            <button id="saveDiaryBtn" class="save-btn">일지 저장</button>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -221,7 +221,15 @@
                   })
                   .then(() => {
                     goalCard.remove();
+
+                    // 삭제 후 보이는 목표 개수 확인
+                    const remaining = document.querySelectorAll('.goal-card').length;
+
+                    if (remaining < 5 && loadBtn.innerText !== '목록 간소화하기') {
+                      loadMoreGoals(); // 아래에 정의
+                    }
                   })
+
                   .catch(err => {
                     alert('삭제 실패: ' + err.message);
                   });
@@ -243,12 +251,7 @@
       lastGoalId = null;
     }
 
-    loadBtn.addEventListener('click', async function () {
-      if (loadBtn.innerText === '목록 간소화하기') {
-        simplifyGoalList();
-        return;
-      }
-
+    async function loadMoreGoals() {
       if (isLoading) return;
       isLoading = true;
 
@@ -269,32 +272,33 @@
           div.setAttribute('data-completed', goal.isCompleted);
 
           div.innerHTML = `
-            <div class="goal-header">
-              <div class="goal-left">
-                <div class="goal-title">${goal.title}</div>
-                <div class="goal-meta">
-                  <span>${goal.createdValue}</span>
-                  <span>${
+        <div class="goal-header">
+          <div class="goal-left">
+            <div class="goal-title">${goal.title}</div>
+            <div class="goal-meta">
+              <span>${goal.createdValue}</span>
+              <span>${
                   goal.repeatType === 'DAILY' ? ' · 반복: 매일' :
                           goal.repeatType === 'WEEKLY' ? ' · 반복: 주 3회' :
                                   ` · 반복: 주 ${goal.repeatValue}회`
           }</span>
-                </div>
-              </div>
-              <div class="goal-category">${goal.categoryName}</div>
             </div>
-            <div class="goal-percent">${goal.progress}%</div>
-            <div class="progress-bar">
-              <div class="progress" style="width:${goal.progress}%;"></div>
-            </div>
-            <div class="goal-actions">
-              <button class="button edit-btn" ${goal.isCompleted ? 'disabled' : ''}>수정</button>
-              <button class="button delete-btn" ${goal.isCompleted ? 'disabled' : ''}>
-                ${goal.isCompleted ? '종료됨' : '종료'}
-              </button>
-              <button class="button remove-btn" ${goal.isCompleted ? 'disabled' : ''}>삭제</button>
-            </div>
-          `;
+          </div>
+          <div class="goal-category">${goal.categoryName}</div>
+        </div>
+        <div class="goal-percent">${goal.progress}%</div>
+        <div class="progress-bar">
+          <div class="progress" style="width:${goal.progress}%;"></div>
+        </div>
+        <div class="goal-actions">
+          <button class="button edit-btn" ${goal.isCompleted ? 'disabled' : ''}>수정</button>
+          <button class="button delete-btn" ${goal.isCompleted ? 'disabled' : ''}>
+            ${goal.isCompleted ? '종료됨' : '종료'}
+          </button>
+          <button class="button remove-btn" ${goal.isCompleted ? 'disabled' : ''}>삭제</button>
+        </div>
+      `;
+
           document.getElementById('goal-list-container').appendChild(div);
         });
 
@@ -311,7 +315,16 @@
       }
 
       isLoading = false;
+    }
+
+    loadBtn.addEventListener('click', () => {
+      if (loadBtn.innerText === '목록 간소화하기') {
+        simplifyGoalList();
+      } else {
+        loadMoreGoals();
+      }
     });
+
   });
 </script>
 

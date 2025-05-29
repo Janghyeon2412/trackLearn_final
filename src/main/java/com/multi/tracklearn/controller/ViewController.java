@@ -1,18 +1,20 @@
 package com.multi.tracklearn.controller;
 
 import com.multi.tracklearn.auth.JwtTokenProvider;
+import com.multi.tracklearn.auth.JwtUserAuthentication;
 import com.multi.tracklearn.domain.Category;
 import com.multi.tracklearn.domain.User;
+import com.multi.tracklearn.dto.DiaryDetailDTO;
+import com.multi.tracklearn.dto.DiaryEditDTO;
 import com.multi.tracklearn.dto.UserLoginDTO;
 import com.multi.tracklearn.dto.UserSignupDTO;
-import com.multi.tracklearn.service.CategoryService;
-import com.multi.tracklearn.service.UserService;
-import com.multi.tracklearn.service.UserTokenService;
+import com.multi.tracklearn.service.*;
 import com.multi.tracklearn.validation.ValidStep1;
 import com.multi.tracklearn.validation.ValidStep2;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,12 +34,16 @@ public class ViewController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserTokenService userTokenService;
+    private final DiaryService diaryService;
+    private final GoalService goalService;
 
-    public ViewController(CategoryService categoryService, UserService userService, JwtTokenProvider jwtTokenProvider, UserTokenService userTokenService) {
+    public ViewController(CategoryService categoryService, UserService userService, JwtTokenProvider jwtTokenProvider, UserTokenService userTokenService, DiaryService diaryService, GoalService goalService) {
         this.categoryService = categoryService;
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userTokenService = userTokenService;
+        this.diaryService = diaryService;
+        this.goalService = goalService;
     }
 
     @GetMapping("/signup/step1")
@@ -175,10 +182,73 @@ public class ViewController {
     }
 
     @GetMapping("/diary/write")
-    public String diaryWritePage() {
+    public String showDiaryWritePage(@AuthenticationPrincipal String email, Model model) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        model.addAttribute("nickname", user.getNickname());
+        model.addAttribute("todayGoals", goalService.getTodayGoals(email));
+
+        // ⬅️ 이 한 줄 추가
+        model.addAttribute("diaryEdit", new DiaryEditDTO());
+
         return "diary/write";
     }
 
 
+
+    @GetMapping("/diary/history")
+    public String showDiaryHistoryPage(@AuthenticationPrincipal String email, Model model) {
+        if (email == null || email.isBlank()) {
+            return "redirect:/login";
+        }
+
+        Optional<User> optionalUser = userService.findOptionalByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("nickname", optionalUser.get().getNickname());
+        return "diary/diary-list";
+    }
+
+    @GetMapping("/diary/edit/{goalLogId}")
+    public String editDiaryForm(@PathVariable Long goalLogId,
+                                @AuthenticationPrincipal String email,
+                                Model model) {
+
+        System.out.println(">>> [editDiaryForm] goalLogId: " + goalLogId);
+        System.out.println(">>> [editDiaryForm] email: " + email);
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        System.out.println(">>> [editDiaryForm] userId: " + user.getId());
+
+        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, email);
+
+        model.addAttribute("nickname", user.getNickname());
+        model.addAttribute("diaryEdit", dto);
+
+        return "diary/edit";
+    }
+
+
+    @GetMapping("/diary/detail/{diaryId}")
+    public String showDiaryDetail(@PathVariable Long diaryId,
+                                  Authentication authentication,
+                                  Model model) {
+        if (authentication == null || !(authentication instanceof JwtUserAuthentication)) {
+            return "redirect:/login";
+        }
+
+        JwtUserAuthentication auth = (JwtUserAuthentication) authentication;
+        String email = auth.getEmail();
+
+        DiaryDetailDTO dto = diaryService.getDiaryDetail(diaryId, email);
+        model.addAttribute("diary", dto);
+
+        return "diary/detail";
+    }
 
 }

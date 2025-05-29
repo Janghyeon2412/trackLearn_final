@@ -79,4 +79,7 @@ public class GoalLog {
         this.onUpdate();
     }
 
+    public boolean isChecked() {
+        return Boolean.TRUE.equals(this.isChecked);
+    }
 }

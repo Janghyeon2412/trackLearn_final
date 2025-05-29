@@ -9,6 +9,12 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/header.css">
 
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+
+  <!-- FullCalendar JS -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+
 </head>
 
 <body>
@@ -16,10 +22,17 @@
 
 <main>
   <!-- 오늘의 목표 표시 영역 -->
-  <section>
+  <section class="goal-section">
     <h3>오늘의 목표</h3>
     <div id="today-goals" class="goal-list"></div>
+    <div class="goal-btn-wrapper">
+      <a href="/diary/write" class="goal-write-button">일지 작성</a>
+    </div>
   </section>
+
+
+
+
 
 
 
@@ -42,6 +55,7 @@
   <section id="next-schedule">
     <h2>다가오는 일정</h2>
     <div id="schedule-cards"></div>
+    <div id="calendar"></div>
   </section>
 
   <script src="/js/dashboard.js"></script>
