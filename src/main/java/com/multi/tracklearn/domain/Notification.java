@@ -29,7 +29,9 @@ public class Notification {
     @Column(columnDefinition = "ENUM('goal', 'feedback', 'system') DEFAULT 'system'")
     private NotificationType type = NotificationType.system;
 
+    @Column(name = "expired_at")
     private LocalDateTime expiredDate;
+
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -1,18 +1,13 @@
 package com.multi.tracklearn.service;
 
 
-import com.multi.tracklearn.domain.Diary;
-import com.multi.tracklearn.domain.Goal;
-import com.multi.tracklearn.domain.GoalLog;
-import com.multi.tracklearn.domain.User;
+import com.multi.tracklearn.domain.*;
 import com.multi.tracklearn.dto.DiaryDetailDTO;
 import com.multi.tracklearn.dto.DiaryEditDTO;
 import com.multi.tracklearn.dto.DiaryListDTO;
 import com.multi.tracklearn.dto.DiarySaveDTO;
-import com.multi.tracklearn.repository.DiaryRepository;
-import com.multi.tracklearn.repository.GoalLogRepository;
-import com.multi.tracklearn.repository.GoalRepository;
-import com.multi.tracklearn.repository.UserRepository;
+import com.multi.tracklearn.gpt.GptFeedbackService;
+import com.multi.tracklearn.repository.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
@@ -26,13 +21,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import com.multi.tracklearn.dto.GptFeedbackRequestDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +37,10 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final GoalLogRepository goalLogRepository;
     private final GoalRepository goalRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final GptFeedbackService gptFeedbackService;
+    private final NotificationService notificationService;
+    private final UserSettingService userSettingService;
 
     @Transactional
     public void saveDiary(String email, DiarySaveDTO diarySaveDTO) {
@@ -53,6 +50,10 @@ public class DiaryService {
         }
 
         Diary diary;
+
+        // ✅ 오늘 전체 goalLogId 미리 조회
+        List<GoalLog> todayLogs = goalLogRepository.findByUserIdAndDate(user.getId(), LocalDate.now());
+        List<Long> todayGoalLogIds = todayLogs.stream().map(GoalLog::getId).toList();
 
         if (diarySaveDTO.getDiaryId() != null) {
             // 수정 모드
@@ -67,45 +68,53 @@ public class DiaryService {
             diary.setModifiedPerson(user.getNickname());
 
         } else {
-            // 작성 모드
+            boolean alreadyExists = diaryRepository.existsByUserAndDate(user, LocalDate.now());
+            if (alreadyExists) {
+                throw new IllegalStateException("이미 오늘 일지를 작성하셨습니다.");
+            }
+
             diary = new Diary();
             diary.setUser(user);
             diary.setCreatedAt(LocalDateTime.now());
             diary.setCreatedPerson(user.getNickname());
-
-            // ✅ 연관 goalLog 설정: 체크된 목표 중 첫 번째를 diary에 연결
-            List<Long> completedGoalIds = diarySaveDTO.getCompletedGoalIds();
-            if (completedGoalIds != null && !completedGoalIds.isEmpty()) {
-                diary.setGoalLogIds(completedGoalIds);  // ✅ goalLogIds 전체를 직접 설정
-            }
-
         }
 
+        // ✅ 오늘 전체 목표 ID 저장 (중복 없이)
+        diary.setGoalLogIds(new ArrayList<>(new LinkedHashSet<>(todayGoalLogIds)));
+
+        // ✅ 공통 필드 설정
         diary.setTitle(diarySaveDTO.getTitle());
         diary.setContent(diarySaveDTO.getContent());
+        diary.setDifficulty(diarySaveDTO.getDifficulty());
+        diary.setTomorrowPlan(diarySaveDTO.getTomorrowPlan());
 
-        // 최대 30자로 잘라야 DB와 일치
         String summary = generateSummary(diarySaveDTO.getContent(), 30);
-        if (summary.length() > 30) {
-            summary = summary.substring(0, 30);
-        }
-        diary.setSummary(summary);
-
-
-
+        diary.setSummary(summary.length() > 30 ? summary.substring(0, 30) : summary);
 
         diary.setSatisfaction(diarySaveDTO.getSatisfaction());
         diary.setStudyTime(diarySaveDTO.getStudyTime());
         diary.setDate(LocalDate.now());
-        diary.setRetrospectives(
-                diarySaveDTO.getRetrospectives() != null && !diarySaveDTO.getRetrospectives().isEmpty()
-                        ? diarySaveDTO.getRetrospectives()
-                        : new ArrayList<>()
-        );
 
+        // ✅ 회고 보정
+        List<String> retrospectives = diarySaveDTO.getRetrospectives() != null
+                ? new ArrayList<>(diarySaveDTO.getRetrospectives())
+                : new ArrayList<>();
+
+        retrospectives = retrospectives.stream()
+                .map(r -> r.length() > 30 ? r.substring(0, 30) : r)
+                .collect(Collectors.toList());
+
+        // ✅ 누락된 회고 저장 로직 (ElementCollection 대상)
+        if (diary.getRetrospectives() == null) {
+            diary.setRetrospectives(new ArrayList<>());
+        } else {
+            diary.getRetrospectives().clear();
+        }
+        diary.getRetrospectives().addAll(retrospectives); // ★ 필수
         diaryRepository.save(diary);
 
-        // 체크된 목표 처리
+
+        // ✅ 체크된 목표 처리
         List<Long> logIds = diarySaveDTO.getCompletedGoalIds();
         if (logIds != null && !logIds.isEmpty()) {
             List<GoalLog> logs = goalLogRepository.findAllById(logIds);
@@ -114,7 +123,6 @@ public class DiaryService {
                 goalLogRepository.save(log);
             }
 
-            // 목표 달성률 재계산
             Set<Long> goalIds = logs.stream()
                     .map(log -> log.getGoal().getId())
                     .collect(Collectors.toSet());
@@ -122,6 +130,7 @@ public class DiaryService {
             goalIds.forEach(this::updateGoalProgress);
         }
     }
+
 
     // 요약 생성 함수
     private String generateSummary(String content, int maxLength) {
@@ -245,13 +254,29 @@ public class DiaryService {
             throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
-        List<GoalLog> goalLogs = goalLogRepository.findByDateAndUserId(diary.getDate(), user.getId());
-        if (goalLogs.isEmpty()) {
-            throw new IllegalStateException("해당 날짜에 연결된 목표가 없습니다.");
+        List<Long> checkedGoalLogIds = diary.getGoalLogIds() != null
+                ? new ArrayList<>(new LinkedHashSet<>(diary.getGoalLogIds()))
+                : new ArrayList<>();
+
+        // ✅ 오늘의 모든 GoalLog 가져오기
+        LocalDate today = diary.getDate(); // 또는 LocalDate.now()
+        List<GoalLog> todayGoalLogs = goalLogRepository.findByUserIdAndDate(user.getId(), today);
+
+        // ✅ 체크된 ID 기준으로 isChecked 표시
+        for (GoalLog log : todayGoalLogs) {
+            log.setChecked(checkedGoalLogIds.contains(log.getId()));
         }
 
-        return DiaryEditDTO.fromEntity(diary, goalLogs);
+        for (GoalLog log : todayGoalLogs) {
+            boolean isChecked = checkedGoalLogIds.contains(log.getId());
+            log.setChecked(isChecked);
+            System.out.println("📌 GoalLog ID: " + log.getId() + ", isChecked: " + isChecked);
+        }
+
+
+        return DiaryEditDTO.fromEntityWithAllGoalLogs(diary, todayGoalLogs);
     }
+
 
 
 
@@ -259,9 +284,7 @@ public class DiaryService {
     @Transactional
     public void updateDiaryByDiaryId(Long diaryId, DiaryEditDTO dto, String email) {
         User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
-        }
+        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
 
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 일지를 찾을 수 없습니다."));
@@ -270,29 +293,68 @@ public class DiaryService {
             throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
+        // ✅ 오늘 전체 목표 조회
+        List<GoalLog> todayLogs = goalLogRepository.findByUserIdAndDate(user.getId(), diary.getDate());
+        List<Long> allGoalLogIds = todayLogs.stream().map(GoalLog::getId).toList();
+
+        // ✅ 체크된 목표 ID
+        List<Long> checkedGoalIds = dto.getGoalLogIds() != null
+                ? new ArrayList<>(new LinkedHashSet<>(dto.getGoalLogIds()))
+                : new ArrayList<>();
+
+        // ✅ 회고 내용 보정
+        List<String> retrospectives = dto.getRetrospectives() != null
+                ? new ArrayList<>(dto.getRetrospectives())
+                : new ArrayList<>();
+
+        while (retrospectives.size() < checkedGoalIds.size()) retrospectives.add("");
+        if (retrospectives.size() > checkedGoalIds.size()) {
+            retrospectives = retrospectives.subList(0, checkedGoalIds.size());
+        }
+
+        retrospectives = retrospectives.stream()
+                .map(r -> r.length() > 150 ? r.substring(0, 150) : r)
+                .collect(Collectors.toList());
+
+        // ✅ 회고 리스트 갱신
+        if (diary.getRetrospectives() == null) {
+            diary.setRetrospectives(new ArrayList<>());
+        } else {
+            diary.getRetrospectives().clear();
+        }
+        diary.getRetrospectives().addAll(retrospectives);
+
+        // ✅ 필드 업데이트
         diary.setTitle(dto.getTitle());
         diary.setContent(dto.getContent());
         diary.setStudyTime(dto.getStudyTime());
         diary.setSatisfaction(dto.getSatisfaction());
-
-        // ✅ [추가] 체크된 목표 ID 리스트 다시 저장
-        if (dto.getGoalLogIds() != null && !dto.getGoalLogIds().isEmpty()) {
-            diary.setGoalLogIds(dto.getGoalLogIds());
-        }
-
-        // ✅ 회고 리스트
-        diary.setRetrospectives(
-                dto.getRetrospectives() != null
-                        ? new ArrayList<>(dto.getRetrospectives())
-                        : new ArrayList<>()
-        );
-
         diary.setUpdatedAt(LocalDateTime.now());
         diary.setModifiedPerson(user.getNickname());
+        diary.setDifficulty(dto.getDifficulty());
+        diary.setTomorrowPlan(dto.getTomorrowPlan());
+
+        // ✅ 핵심: 오늘 전체 목표 ID 저장
+        diary.setGoalLogIds(new ArrayList<>(allGoalLogIds));
 
         diaryRepository.save(diary);
-    }
 
+        // ✅ GoalLog 상태 반영 (isChecked)
+        for (GoalLog log : todayLogs) {
+            if (checkedGoalIds.contains(log.getId())) {
+                log.markChecked();
+            } else {
+                log.uncheck();
+            }
+            goalLogRepository.save(log);
+        }
+
+        // ✅ 목표 달성률 재계산
+        Set<Long> goalIds = todayLogs.stream()
+                .map(log -> log.getGoal().getId())
+                .collect(Collectors.toSet());
+        goalIds.forEach(this::updateGoalProgress);
+    }
 
 
 
@@ -323,7 +385,7 @@ public class DiaryService {
                 throw new AccessDeniedException("수정 권한이 없습니다.");
             }
 
-            return DiaryEditDTO.fromEntity(diary, goalLogs);
+            return DiaryEditDTO.fromEntityWithAllGoalLogs(diary, goalLogs);
         }
 
         if (!goalLog.getUser().getId().equals(user.getId())) {
@@ -345,9 +407,166 @@ public class DiaryService {
             throw new AccessDeniedException("조회 권한 없음");
         }
 
-        List<GoalLog> goalLogs = goalLogRepository.findByDiaryId(diaryId);
-        return DiaryDetailDTO.fromEntity(diary, goalLogs);
+        List<GoalLog> goalLogs = goalLogRepository.findAllById(diary.getGoalLogIds());
+        List<Feedback> feedbacks = feedbackRepository.findByDiaryId(diaryId);
+
+        return DiaryDetailDTO.fromEntity(diary, goalLogs, feedbacks);
     }
 
 
+
+    public boolean existsTodayDiaryByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+
+        LocalDate today = LocalDate.now();
+        return diaryRepository.findByUserAndDate(user, today).isPresent();
+    }
+
+
+    public Optional<Diary> findDiaryByGoalLogId(Long goalLogId, String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+
+        return diaryRepository.findByUserAndGoalLogId(user, goalLogId);
+    }
+
+
+    public Diary getDiaryByIdAndUserEmail(Long diaryId, String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+
+        Diary diary = diaryRepository.findWithGoalLogIds(diaryId)
+                .orElseThrow(() -> new IllegalArgumentException("일지를 찾을 수 없습니다."));
+
+        if (!diary.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("접근 권한이 없습니다.");
+        }
+
+        return diary;
+    }
+
+    @Transactional
+    public String generateFeedbackByDiaryId(Long diaryId, String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+
+        Diary diary = diaryRepository.findById(diaryId)
+                .orElseThrow(() -> new IllegalArgumentException("일지를 찾을 수 없습니다."));
+
+        if (!diary.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("접근 권한이 없습니다.");
+        }
+
+        // ✅ goalLog 리스트 불러오기
+        List<GoalLog> goalLogs = goalLogRepository.findByDiaryId(diaryId);
+
+        // ✅ GPT 요청 DTO 생성
+        GptFeedbackRequestDTO requestDto = GptFeedbackRequestDTO.fromDiary(diary, goalLogs);
+
+        // ✅ prompt 생성
+        String prompt = gptFeedbackService.generatePrompt(
+                requestDto.getTitle(),
+                requestDto.getContent(),
+                requestDto.getStudyTime(),
+                requestDto.getSatisfaction(),
+                requestDto.getGoals(),
+                requestDto.getRetrospectives(),
+                requestDto.getGoalDetails(),
+                requestDto.getGoalReasons(),
+                requestDto.getLearningStyles(),
+                requestDto.getDifficulty(),
+                requestDto.getTomorrowPlan()
+        );
+
+        // ✅ GPT 응답 받기
+        String feedback = gptFeedbackService.getFeedback(
+                requestDto.getTone(),
+                requestDto.getSubject(),
+                prompt
+        );
+
+        return feedback;
+    }
+
+
+    @Transactional
+    public String generateAndSaveFeedback(GptFeedbackRequestDTO dto, String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자 없음");
+
+        Diary diary = null;
+        if (dto.getDiaryId() != null) {
+            diary = diaryRepository.findById(dto.getDiaryId())
+                    .orElseThrow(() -> new IllegalArgumentException("일지를 찾을 수 없습니다."));
+
+            if (!diary.getUser().getId().equals(user.getId())) {
+                throw new AccessDeniedException("접근 권한이 없습니다.");
+            }
+        }
+
+        // ✅ GPT 프롬프트 구성 및 호출은 공통
+        String prompt = gptFeedbackService.generatePrompt(
+                dto.getTitle(),
+                dto.getContent(),
+                dto.getStudyTime(),
+                dto.getSatisfaction(),
+                dto.getGoals(),
+                dto.getRetrospectives(),
+                dto.getGoalDetails(),
+                dto.getGoalReasons(),
+                dto.getLearningStyles(),
+                dto.getDifficulty(),
+                dto.getTomorrowPlan()
+        );
+
+        String response = gptFeedbackService.getFeedback(dto.getTone(), dto.getSubject(), prompt);
+
+        // ✅ diary가 있을 때만 DB 저장
+        if (diary != null) {
+            List<Feedback> existing = feedbackRepository.findByDiaryId(diary.getId());
+            feedbackRepository.deleteAll(existing);
+
+            List<String> sections = Arrays.stream(response.split("\\n\\n"))
+                    .map(String::trim)
+                    .toList();
+
+            for (int i = 0; i < sections.size(); i++) {
+                Feedback feedback = new Feedback();
+                feedback.setDiary(diary);
+                feedback.setToneType(Feedback.ToneType.soft);
+                feedback.setContent(sections.get(i));
+                feedback.setCreatedPerson("GPT");
+                feedback.setModifiedPerson("GPT");
+
+                switch (i) {
+                    case 0 -> feedback.setResponseType(Feedback.ResponseType.cheer);
+                    case 1 -> feedback.setResponseType(Feedback.ResponseType.advice);
+                    case 2 -> feedback.setResponseType(Feedback.ResponseType.adjust);
+                    default -> feedback.setResponseType(Feedback.ResponseType.advice);
+                }
+
+                feedbackRepository.save(feedback);
+            }
+
+            UserSetting setting = userSettingService.getSetting(user.getId());
+            if (setting.getGptFeedbackNotify()) {
+                notificationService.create(
+                        user,
+                        "GPT 피드백이 도착했습니다. 일지를 확인해보세요.",
+                        Notification.NotificationType.feedback
+                );
+            }
+        }
+
+        return response;
+    }
+
 }
+
+
+

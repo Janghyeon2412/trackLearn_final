@@ -49,7 +49,8 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
     boolean existsByGoalAndDate(Goal goal, LocalDate date);
 
 
-    List<GoalLog> findByUserAndDateBetween(User user, LocalDate start, LocalDate end);
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.user = :user AND gl.date BETWEEN :start AND :end AND gl.goal.deleted = false")
+    List<GoalLog> findByUserAndDateBetween(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
 
     @Query("SELECT gl FROM GoalLog gl WHERE gl.user = :user AND gl.date BETWEEN :start AND :end AND gl.goal.deleted = false AND gl.goal.isCompleted = false")
@@ -60,8 +61,16 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
     @Query("SELECT g FROM GoalLog g WHERE g.date = :date AND g.user.id = :userId AND g.goal.deleted = false")
     List<GoalLog> findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
 
-
-    @Query("SELECT gl FROM GoalLog gl JOIN gl.goal g JOIN Diary d ON gl.id IN elements(d.goalLogIds) WHERE d.id = :diaryId")
+    @Query("SELECT gl FROM GoalLog gl JOIN Diary d ON gl.id IN elements(d.goalLogIds) WHERE d.id = :diaryId")
     List<GoalLog> findByDiaryId(@Param("diaryId") Long diaryId);
+
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.date = :date AND gl.isChecked = true AND gl.goal.deleted = false")
+    List<GoalLog> findCheckedGoalsByDate(@Param("date") LocalDate date);
+
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.user = :user AND gl.isChecked = true AND gl.goal.deleted = false ORDER BY gl.date DESC")
+    List<GoalLog> findTop5ByUserAndIsCheckedTrueOrderByDateDesc(@Param("user") User user);
+
+    @Query("SELECT gl FROM GoalLog gl WHERE gl.date = :date AND gl.goal.deleted = false")
+    List<GoalLog> findByDate(@Param("date") LocalDate date);
 
 }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>설정 페이지</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/setting.css">
+    <script src="/js/toast.js"></script>
+    <script src="/js/feedback-notify.js"></script>
+
+    <script src="/js/notification.js" defer></script>
+
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container">
+    <h2>설정</h2>
+
+    <!-- 🔹 계정 정보 -->
+    <section>
+        <h3>계정 정보</h3>
+        <div>닉네임: <span id="nicknameField">로딩중...</span></div>
+        <div>이메일: <span id="emailField">로딩중...</span></div>
+        <input type="text" id="newNickname" placeholder="새 닉네임">
+        <button id="updateNicknameBtn">닉네임 변경</button>
+    </section>
+
+    <!-- 🔹 비밀번호 변경 -->
+    <section>
+        <h3>비밀번호 변경</h3>
+        <input type="password" id="currentPassword" placeholder="현재 비밀번호">
+        <input type="password" id="newPassword" placeholder="새 비밀번호">
+        <button id="changePasswordBtn">비밀번호 변경</button>
+    </section>
+
+    <!-- 🔹 GPT 피드백 설정 -->
+    <section>
+        <h3>GPT 피드백 말투 설정</h3>
+        <label><input type="radio" name="tone" value="SOFT"> 부드럽게</label>
+        <label><input type="radio" name="tone" value="DIRECT"> 직설적으로</label>
+        <button id="saveGptSettingBtn">저장</button>
+    </section>
+
+    <!-- 🔹 알림 수신 설정 -->
+    <section>
+        <h3>알림 수신 설정</h3>
+        <label><input type="checkbox" id="gptAlarm"> GPT 피드백 생성 알림</label>
+        <label><input type="checkbox" id="dailyAlarm"> 오늘 목표 도래 알림</label>
+        <label><input type="checkbox" id="deadlineAlarm"> 오늘 일지 미작성 알림</label>
+        <button id="saveNotificationBtn">저장</button>
+    </section>
+
+
+    <!-- 🔹 로그아웃 및 탈퇴 -->
+    <section>
+        <h3>계정 관리</h3>
+        <a href="/logout">로그아웃</a> |
+        <a href="#" id="deleteAccountLink" class="link-danger">계정 탈퇴</a>
+    </section>
+
+
+</main>
+
+<script src="/js/settings.js"></script>
+</body>
+</html>

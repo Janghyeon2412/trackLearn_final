@@ -40,6 +40,13 @@ public class Diary {
     @Column(name = "is_favorite")
     private boolean isFavorite = false;
 
+    @Column(length = 500)
+    private String difficulty;
+
+    @Column(length = 500)
+    private String tomorrowPlan;
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -60,9 +67,10 @@ public class Diary {
 
     // ✅ 회고 리스트 저장 (다중 회고)
     @ElementCollection
-    @CollectionTable(name = "diary_retrospectives", joinColumns = @JoinColumn(name = "diary_id"))
-    @Column(name = "retrospective", length = 255)
-    private List<String> retrospectives = new ArrayList<>();
+    @CollectionTable(name = "diary_retrospective", joinColumns = @JoinColumn(name = "diary_id"))
+    @Column(name = "retrospective", length = 150)  // ← 여기 length만 수정
+    private List<String> retrospectives;
+
 
     @PrePersist
     protected void onCreate() {

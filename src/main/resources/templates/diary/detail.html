@@ -5,6 +5,10 @@
     <title>일지 상세보기</title>
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/diary-detail.css">
+
+    <script src="/js/feedback-notify.js"></script>
+    <script src="/js/notification.js" defer></script>
+
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
@@ -12,6 +16,10 @@
 <main class="diary-container">
     <section class="form-section">
         <h2>일지 상세보기</h2>
+
+        <th:block th:if="${diary != null and diary.id != null}">
+            <input type="hidden" id="diaryId" th:value="${diary.id}" />
+        </th:block>
 
         <!-- 제목 + 날짜 + 즐겨찾기 -->
         <div class="diary-detail-top-bar">
@@ -25,13 +33,11 @@
         </div>
 
         <div class="info-row">
-            <!-- 공부 시간 -->
             <div>
                 <label>공부 시간</label>
                 <p th:text="|${diary.studyTime}분|"></p>
             </div>
 
-            <!-- 만족도 (label + 별점 수평 정렬) -->
             <div class="diary-detail-satisfaction-row">
                 <label class="satisfaction-label">만족도</label>
                 <div class="diary-detail-star-rating">
@@ -41,10 +47,7 @@
                     </th:block>
                 </div>
             </div>
-
-
         </div>
-
 
         <!-- 내용 -->
         <div class="section">
@@ -52,26 +55,54 @@
             <div class="content-box" th:utext="${#strings.replace(diary.content, '\n', '<br/>')}"></div>
         </div>
 
-        <!-- 목표 및 회고 -->
-        <div class="section" th:each="goalTitle, iter : ${diary.goalTitles}">
+        <!-- 오늘의 목표 및 회고 -->
+        <div th:each="goalTitle, iter : ${diary.goalTitles}">
             <h4 th:text="'오늘의 목표 ' + ${iter.index + 1} + ': ' + ${goalTitle}"></h4>
 
-            <!-- ✅ null 및 인덱스 체크 조건 필수 -->
-            <div class="retrospective-box diary-retrospective"
-                 th:if="${diary.retrospectives != null and diary.retrospectives.size() > iter.index}"
-                 th:utext="${#strings.replace(diary.retrospectives[iter.index], '\n', '<br/>')}">
+            <div class="section">
+                <label>회고</label>
+                <div class="content-box"
+                     th:if="${diary.retrospectives != null and diary.retrospectives.size() > iter.index}"
+                     th:utext="${#strings.replace(diary.retrospectives[iter.index], '\n', '<br/>')}">
+                </div>
             </div>
         </div>
 
-
-
-
-        <!-- 뒤로가기 버튼 -->
-        <div class="btn-wrap" style="margin-top: 2rem;">
-            <a href="/diary/list" class="back-btn">목록으로</a>
+        <div class="section">
+            <label>오늘 학습 중 어려웠던 점</label>
+            <div class="content-box"
+                 th:if="${diary.hardships != null and diary.hardships.size() > 0}"
+                 th:utext="${#strings.replace(diary.hardships[0], '\n', '<br/>')}">
+            </div>
         </div>
 
+        <div class="section">
+            <label>내일 보완하고 싶은 점</label>
+            <div class="content-box"
+                 th:if="${diary.improvements != null and diary.improvements.size() > 0}"
+                 th:utext="${#strings.replace(diary.improvements[0], '\n', '<br/>')}">
+            </div>
+        </div>
+
+        <!-- ✅ GPT 피드백 결과만 표시 -->
+        <div id="confirmedGptBox" class="gpt-feedback-box" style="margin-top: 1rem;">
+            <th:block th:if="${diary.feedbacks != null and diary.feedbacks.size() > 0}">
+                <label>GPT 피드백</label>
+                <div class="content-box" th:each="fb : ${diary.feedbacks}">
+                    <h5 th:text="'[' + ${fb.responseType} + ']'"></h5>
+                    <p th:utext="${#strings.replace(fb.content, '\n', '<br/>')}"></p>
+                    <hr/>
+                </div>
+            </th:block>
+        </div>
+
+        <!-- 목록으로만 이동 -->
+        <div class="btn-wrap btn-right">
+            <a href="/diary/history" class="back-btn">목록으로</a>
+        </div>
     </section>
 </main>
+
 </body>
 </html>
+

@@ -1,6 +1,7 @@
 package com.multi.tracklearn.controller;
 
 import com.multi.tracklearn.auth.JwtTokenProvider;
+import com.multi.tracklearn.auth.JwtUserAuthentication;
 import com.multi.tracklearn.domain.User;
 import com.multi.tracklearn.dto.ResetPasswordChangeDTO;
 import com.multi.tracklearn.dto.ResetPasswordRequestDTO;
@@ -46,7 +47,6 @@ public class UserController {
         if (userService.existsByEmail(userSignupDTO.getEmail())) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
-
         userService.signup(userSignupDTO);
         return ResponseEntity.ok("User created");
     }
@@ -111,20 +111,30 @@ public class UserController {
 
     // 현재 사용자 이메일 반환 (인증 사용자)
     @RequestMapping(value = "/me", method = RequestMethod.GET)
-    public ResponseEntity<String> getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = (String) authentication.getPrincipal();
-        return ResponseEntity.ok(email);
+    public ResponseEntity<String> getCurrentUserEmail(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(user.getEmail());
     }
 
-    @RequestMapping(value = "/me", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = (String) authentication.getPrincipal();
 
-        userService.deleteByEmail(email);
+
+    @DeleteMapping("/me")
+    public ResponseEntity<String> deleteCurrentUser(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = (User) authentication.getPrincipal();
+        userService.deleteByEmail(user.getEmail());
+
         return ResponseEntity.ok("User deleted");
     }
+
+
 
     @PostMapping("/reset-password/request")
     public ResponseEntity<String> requestPasswordReset(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {

@@ -2,6 +2,7 @@ package com.multi.tracklearn.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.multi.tracklearn.domain.Diary;
+import com.multi.tracklearn.domain.Feedback;
 import com.multi.tracklearn.domain.GoalLog;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +17,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class DiaryDetailDTO {
 
+    private Long id;
+
     private String title;
     private String date;
     private int studyTime;
@@ -26,17 +29,39 @@ public class DiaryDetailDTO {
 
     private boolean favorite;
 
+    private List<FeedbackDTO> feedbacks;
 
-    public static DiaryDetailDTO fromEntity(Diary diary, List<GoalLog> goalLogs) {
+    private List<String> hardships;
+    private List<String> improvements;
+
+
+
+
+    public static DiaryDetailDTO fromEntity(Diary diary, List<GoalLog> goalLogs, List<Feedback> feedbacks) {
         List<String> goalTitles = goalLogs.stream()
                 .map(gl -> gl.getGoal().getTitle())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());  // ← 괄호 닫힘
 
         List<String> retrospectives = diary.getRetrospectives() != null
                 ? diary.getRetrospectives()
                 : new ArrayList<>();
 
+        List<FeedbackDTO> feedbackDTOs = feedbacks.stream()
+                .map(FeedbackDTO::fromEntity)
+                .toList();
+
+        List<String> hardships = new ArrayList<>();
+        if (diary.getDifficulty() != null && !diary.getDifficulty().isBlank()) {
+            hardships.add(diary.getDifficulty());
+        }
+
+        List<String> improvements = new ArrayList<>();
+        if (diary.getTomorrowPlan() != null && !diary.getTomorrowPlan().isBlank()) {
+            improvements.add(diary.getTomorrowPlan());
+        }
+
         return new DiaryDetailDTO(
+                diary.getId(),
                 diary.getTitle(),
                 diary.getDate().toString(),
                 diary.getStudyTime(),
@@ -44,9 +69,14 @@ public class DiaryDetailDTO {
                 diary.getContent(),
                 goalTitles,
                 retrospectives,
-                diary.isFavorite()
+                diary.isFavorite(),
+                feedbackDTOs,
+                hardships,
+                improvements
         );
     }
+
+
 
 
     public int getSatisfactionInt() {

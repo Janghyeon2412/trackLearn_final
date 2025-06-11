@@ -19,22 +19,36 @@ function renderCalendar() {
         },
         events: async function (info, successCallback, failureCallback) {
             try {
-                const res = await fetch(`/api/dashboard/calendar?start=${info.startStr}&end=${info.endStr}`);
+                const startDate = info.startStr.split("T")[0];
+                const endDate = info.endStr.split("T")[0];
+
+                const res = await fetch(`/api/dashboard/calendar?start=${startDate}&end=${endDate}`);
                 const data = await res.json();
 
-                const events = data.map(log => ({
-                    id: log.goalId,
-                    title: log.title,
-                    start: log.date,
-                    url: log.checked
-                        ? `/diary/view?goalLogId=${log.goalLogId}`
-                        : `/diary/write?goalLogId=${log.goalLogId}`,
-                    className: log.checked ? 'completed' : 'unchecked',
-                    extendedProps: {
-                        startDate: log.startDate,
-                        endDate: log.endDate
-                    }
-                }));
+                // 오늘 날짜 (KST 보정)
+                const now = new Date();
+                const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const todayStr = koreaTime.toISOString().split("T")[0];
+
+                const events = data.map(log => {
+                    const isToday = log.date === todayStr;
+
+                    return {
+                        id: log.goalLogId,  // goalLogId 기준
+                        title: log.title,
+                        start: log.date,
+                        className: log.goalCompleted ? 'completed' : (log.checked ? 'completed' : 'unchecked'),
+                        extendedProps: {
+                            startDate: log.startDate,
+                            endDate: log.endDate,
+                            diaryId: log.diaryId,
+                            isChecked: log.checked,
+                            isToday: isToday,
+                            goalId: log.goalId
+                        }
+                    };
+                });
+
 
                 successCallback(events);
             } catch (err) {
@@ -51,12 +65,48 @@ function renderCalendar() {
             info.el.setAttribute("title", tooltip);
         },
 
-        eventClick: function (info) {
-            if (info.event.url) {
-                window.location.href = info.event.url;
-                info.jsEvent.preventDefault();
+        eventClick: async function (info) {
+            info.jsEvent.preventDefault();
+
+            const koreaNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+            const todayStr = koreaNow.toISOString().split("T")[0];
+
+            const clickedDateStr = new Date(info.event.start.getTime() + 9 * 60 * 60 * 1000).toISOString().split("T")[0];
+            if (clickedDateStr !== todayStr) {
+                alert("오늘이 아닌 날짜의 목표는 일지를 작성할 수 없습니다.");
+                return;
+            }
+
+            const isChecked = info.event.extendedProps.isChecked; // 회색 표시
+            const diaryId = info.event.extendedProps.diaryId;
+            const goalLogId = info.event.id;
+
+            if (isChecked) {
+                // ✅ 이 목표는 이미 완료된 상태 (회색) → 아무 것도 안 함
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/diary/today-written');
+                const data = await res.json();
+
+                if (data.written === false) {
+                    window.location.href = `/diary/write?goalLogId=${goalLogId}`;
+                } else {
+                    alert("오늘 작성한 일지가 이미 존재합니다.\n수정 페이지에서 편집해주세요.");
+                }
+
+            } catch (err) {
+                console.error("일지 확인 중 오류", err);
+                alert("일지 이동 실패");
             }
         }
+
+
+
+
+
+
     });
 
     calendar.render();
@@ -202,9 +252,12 @@ function renderFeedbackList(feedbacks) {
         const li = document.createElement("li");
         li.className = "feedback-card";
         li.innerHTML = `
-      <div><strong>${f.diaryTitle}</strong> <small>${f.date}</small></div>
-      <p>${f.feedbackContent}</p>
-    `;
+          <a href="/diary/detail/${f.diaryId}" style="text-decoration: none; color: inherit;">
+            <div><strong>${f.diaryTitle}</strong> <small>${f.date}</small></div>
+            <p>${f.feedbackContent.length > 50 ? f.feedbackContent.slice(0, 50) + "..." : f.feedbackContent}</p>
+          </a>
+        `;
+
         list.appendChild(li);
     });
 }

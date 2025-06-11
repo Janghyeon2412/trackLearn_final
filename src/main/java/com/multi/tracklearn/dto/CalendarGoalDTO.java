@@ -12,6 +12,10 @@ public class CalendarGoalDTO {
     @JsonProperty("goalLogId")
     private Long goalLogId;
 
+    @JsonProperty("goalId")
+    private Long goalId;
+
+
     private String title;
     private LocalDate date;
 
@@ -20,5 +24,9 @@ public class CalendarGoalDTO {
 
     private LocalDate startDate;
     private LocalDate endDate;
+
+    private Long diaryId;
+
+    private boolean goalCompleted;
 
 }

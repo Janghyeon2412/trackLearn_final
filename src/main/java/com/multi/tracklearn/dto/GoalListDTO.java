@@ -25,6 +25,9 @@ public class GoalListDTO {
     private int progress;
     private Long categoryId;
 
+    private String goalDetail;
+    private String goalReason;
+    private String learningStyle;
 
     public static GoalListDTO fromEntity(Goal goal) {
         return new GoalListDTO(
@@ -37,7 +40,10 @@ public class GoalListDTO {
                 goal.getCreatedValue().toString(),
                 "", // repeatText 직접 생성하거나 로직 넣기
                 goal.getProgress(),
-                goal.getCategory() != null ? goal.getCategory().getId() : null
+                goal.getCategory() != null ? goal.getCategory().getId() : null,
+                goal.getGoalDetail(),
+                goal.getGoalReason(),
+                goal.getLearningStyle()
         );
     }
 

@@ -40,4 +40,6 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
     List<Goal> findByUserAndIdLessThanAndDeletedFalseOrderByIdDesc(User user, Long cursor, Pageable pageable);
 
 
+    List<Goal> findByUserAndDeletedFalse(User user);
+
 }

@@ -175,3 +175,27 @@ textarea {
 .diary-retrospective {
     white-space: pre-wrap; /* 줄바꿈 유지 */
 }
+
+
+.gpt-btn {
+    background-color: #444;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    margin-left: 0.8rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.gpt-btn:hover {
+    background-color: #666;
+}
+
+.gpt-result-box {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}

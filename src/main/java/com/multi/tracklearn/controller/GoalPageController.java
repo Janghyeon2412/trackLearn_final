@@ -1,5 +1,6 @@
 package com.multi.tracklearn.controller;
 
+import com.multi.tracklearn.domain.User;
 import com.multi.tracklearn.dto.CategoryDTO;
 import com.multi.tracklearn.dto.GoalCreateDTO;
 import com.multi.tracklearn.dto.GoalListDTO;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,8 +35,10 @@ public class GoalPageController {
 
     @GetMapping("/create")
     public String showGoalForm(Model model, Authentication authentication) {
-        String email = authentication != null ? (String) authentication.getPrincipal() : null;
-
+        String email = null;
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            email = user.getEmail();
+        }
         String nickname = null;
         if (email != null) {
             nickname = userService.findNicknameByEmail(email);
@@ -61,9 +65,10 @@ public class GoalPageController {
 
     @PostMapping("/create")
     public String submitGoalForm(Authentication authentication, @Valid @ModelAttribute GoalCreateDTO goalCreateDTO, BindingResult bindingResult, Model model) {
-
-        String email = authentication != null ? (String) authentication.getPrincipal() : null;
-
+        String email = null;
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            email = user.getEmail();
+        }
 
         if (goalCreateDTO.getGoalId() != null) {
             GoalUpdateDTO updateDTO = new GoalUpdateDTO();
@@ -84,20 +89,30 @@ public class GoalPageController {
     }
 
     @PostMapping
-    public String createGoal(@AuthenticationPrincipal String email, GoalCreateDTO goalCreateDTO) {
-        goalService.createGoal(email, goalCreateDTO);
+    public String createGoal(@AuthenticationPrincipal User user, GoalCreateDTO goalCreateDTO) {
+        goalService.createGoal(user.getEmail(), goalCreateDTO);
         return "redirect:/goals/create";
     }
-
-
 
     @PostMapping("/update")
-    public String updateGoal(@ModelAttribute GoalUpdateDTO goalUpdateDTO, @AuthenticationPrincipal String email) {
-        goalService.updateGoal(email, goalUpdateDTO.getGoalId(), goalUpdateDTO);
+    public String updateGoal(@ModelAttribute GoalUpdateDTO goalUpdateDTO, @AuthenticationPrincipal User user) {
+        goalService.updateGoal(user.getEmail(), goalUpdateDTO.getGoalId(), goalUpdateDTO);
         return "redirect:/goals/create";
     }
 
 
+    @GetMapping("/status")
+    public String showGoalStatusPage(Authentication authentication, Model model) {
+        String email = null;
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            email = user.getEmail();
+        }
+        // 오늘 날짜 기본값 전달
+        model.addAttribute("startDate", LocalDate.now().minusDays(7));
+        model.addAttribute("endDate", LocalDate.now());
+
+        return "goal/goal-status";  // templates/goal/goal-status.html 로 연결
+    }
 
 
 }

@@ -5,9 +5,14 @@
     <title>일지 작성</title>
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/diary-write.css">
+
     <script defer src="/js/diary-write.js"></script>
+    <script src="/js/feedback-notify.js"></script>
+
+    <script src="/js/notification.js" defer></script>
+
 </head>
-<body>
+<body th:attr="data-gpt-notify=${userSetting.gptFeedbackNotify}">
 <header th:replace="fragments/header :: header"></header>
 
 <main class="diary-container">
@@ -60,9 +65,28 @@
             <!-- JS로 오늘의 목표 렌더링 -->
         </div>
 
+        <!-- 🔹 오늘의 어려웠던 점 -->
+        <div class="form-section">
+            <label for="difficulty">오늘 학습 중 어려웠던 점이 있다면 적어주세요 (선택사항)</label>
+            <textarea id="difficulty" name="difficulty" rows="3" placeholder="예: 개념이 이해되지 않아 시간이 오래 걸렸어요."></textarea>
+        </div>
+
+        <!-- 🔹 내일 보완하고 싶은 점 -->
+        <div class="form-section">
+            <label for="tomorrowPlan">내일 보완하고 싶은 점이 있다면 적어주세요 (선택사항)</label>
+            <textarea id="tomorrowPlan" name="tomorrowPlan" rows="3" placeholder="예: 오늘 부족했던 부분을 먼저 복습하고 실습을 진행하고 싶어요."></textarea>
+        </div>
+
+
+
         <div class="btn-wrap">
             <button id="saveDiaryBtn" class="save-btn">일지 저장</button>
+            <button type="button" id="gptFeedbackBtn" class="gpt-btn">GPT 피드백 미리보기</button>
         </div>
+
+        <!-- GPT 응답 결과 표시 -->
+        <div id="gptFeedbackResult" class="gpt-result-box" style="margin-top: 1.5rem; white-space: pre-wrap;"></div>
+
 
     </section>
 </main>

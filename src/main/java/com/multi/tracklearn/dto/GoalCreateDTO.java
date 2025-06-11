@@ -26,4 +26,9 @@ public class GoalCreateDTO {
 
     private String repeatValue; // CUSTOM
     private String createdValue;
+
+    private String goalDetail;
+    private String goalReason;
+    private String learningStyle;
+
 }

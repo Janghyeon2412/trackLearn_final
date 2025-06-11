@@ -1,14 +1,8 @@
 package com.multi.tracklearn.service;
 
-import com.multi.tracklearn.domain.Category;
-import com.multi.tracklearn.domain.Goal;
-import com.multi.tracklearn.domain.GoalLog;
-import com.multi.tracklearn.domain.User;
+import com.multi.tracklearn.domain.*;
 import com.multi.tracklearn.dto.*;
-import com.multi.tracklearn.repository.CategoryRepository;
-import com.multi.tracklearn.repository.GoalLogRepository;
-import com.multi.tracklearn.repository.GoalRepository;
-import com.multi.tracklearn.repository.UserRepository;
+import com.multi.tracklearn.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +24,8 @@ public class GoalService {
     private final GoalRepository goalRepository;
     private final GoalLogRepository goalLogRepository;
     private final UserService userService;
+    private final DiaryRepository diaryRepository;
+
 
     public void createGoal(String email, GoalCreateDTO goalCreateDTO) {
         User user = userRepository.findByEmail(email);
@@ -48,7 +44,15 @@ public class GoalService {
                 .createdValue(LocalDate.now())
                 .isCompleted(false)
                 .deleted(false)
+                .goalDetail(goalCreateDTO.getGoalDetail())
+                .goalReason(goalCreateDTO.getGoalReason())
+                .learningStyle(goalCreateDTO.getLearningStyle())
+
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+
                 .build();
+
 
         goalRepository.save(goal);
 
@@ -200,8 +204,12 @@ public class GoalService {
                 goalUpdateDTO.getTitle(),
                 Goal.RepeatType.valueOf(goalUpdateDTO.getRepeatType()),
                 goalUpdateDTO.getRepeatValue(),
-                category
+                category,
+                goalUpdateDTO.getGoalDetail(),
+                goalUpdateDTO.getGoalReason(),
+                goalUpdateDTO.getLearningStyle()
         );
+
         // 기존 GoalLog 삭제
         goalLogRepository.deleteAll(goalLogRepository.findByGoal(goal));
         goalLogRepository.flush();
@@ -276,8 +284,17 @@ public class GoalService {
             throw new SecurityException("종료 권한이 없습니다.");
         }
 
-        goal.complete(); // 완료 상태로 설정
+        // ✅ 목표 완료 처리
+        goal.complete();
+        goalRepository.save(goal);
+
+        // ✅ 관련 GoalLog 전부 완료 처리
+        List<GoalLog> logs = goalLogRepository.findByGoal(goal);
+        for (GoalLog log : logs) {
+            log.setIsChecked(true);
+        }
     }
+
 
 
     @Transactional(readOnly = true)
@@ -316,7 +333,7 @@ public class GoalService {
     private List<GoalListDTO> convertToDTO(List<Goal> goals) {
         return goals.stream()
                 .map(goal -> {
-                    int progress = calculateProgress(goal);
+                    int progress = goal.getIsCompleted() ? 100 : calculateProgress(goal); // ✅ 여기!
 
                     String repeatText;
                     switch (goal.getRepeatType()) {
@@ -336,11 +353,15 @@ public class GoalService {
                             goal.getCreatedValue().toString(),
                             repeatText,
                             progress,
-                            goal.getCategory() != null ? goal.getCategory().getId() : null
+                            goal.getCategory() != null ? goal.getCategory().getId() : null,
+                            goal.getGoalDetail(),
+                            goal.getGoalReason(),
+                            goal.getLearningStyle()
                     );
                 })
                 .collect(Collectors.toList());
     }
+
 
 
     public List<TodayGoalDTO> getTodayGoalsByDate(String email) {
@@ -391,15 +412,69 @@ public class GoalService {
         List<GoalLog> logs = goalLogRepository.findActiveByUserAndDateBetween(user, startDate, endDate);
 
         return logs.stream()
-                .map(log -> new CalendarGoalDTO(
-                        log.getId(),  // goalLogId
-                        log.getGoal().getTitle(),
-                        log.getDate(),
-                        log.getIsChecked(),
-                        log.getGoal().getCreatedValue(),
-                        log.getGoal().getCreatedValue().plusDays(7) // ← 원하는 기준으로 조정
-                ))
+                .map(log -> {
+                    Goal goal = log.getGoal();
+                    LocalDate goalStartDate = goal.getCreatedValue();  // ✅ 변수명 중복 피함
+                    LocalDate goalEndDate = goalStartDate.plusDays(7);
+
+                    Optional<Diary> diaryOpt = diaryRepository.findByUserAndGoalLogId(user, log.getId());
+                    Long diaryId = diaryOpt.map(Diary::getId).orElse(null);
+
+                    return new CalendarGoalDTO(
+                            log.getId(),
+                            goal.getId(),
+                            goal.getTitle(),
+                            log.getDate(),
+                            Boolean.TRUE.equals(log.getIsChecked()),
+                            goalStartDate,
+                            goalEndDate,
+                            diaryId,
+                            goal.getIsCompleted()
+                    );
+                })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<GoalStatisticsDTO> getGoalStatistics(String email, LocalDate startDate, LocalDate endDate) {
+
+
+        User user = userRepository.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+
+        List<Goal> goals = goalRepository.findByUserAndDeletedFalse(user);
+
+        return goals.stream().map(goal -> {
+            List<GoalLog> logsInRange = goalLogRepository.findByGoal(goal).stream()
+                    .filter(log -> !log.getDate().isBefore(startDate) && !log.getDate().isAfter(endDate))
+                    .toList();
+
+            int totalCount = logsInRange.size();
+            int checkedCount = (int) logsInRange.stream().filter(GoalLog::isChecked).count();
+            int progressRate = totalCount > 0 ? (int) Math.round(checkedCount * 100.0 / totalCount) : 0;
+
+            String categoryName = goal.getCategory() != null ? goal.getCategory().getName() : "미지정";
+            String repeatText = switch (goal.getRepeatType()) {
+                case DAILY -> "매일";
+                case WEEKLY -> "주 3회";
+                case CUSTOM -> "주 " + goal.getRepeatValue() + "회";
+            };
+
+            return new GoalStatisticsDTO(
+                    goal.getId(),
+                    goal.getTitle(),
+                    categoryName,
+                    goal.getRepeatType().name(),
+                    repeatText,
+                    totalCount,
+                    checkedCount,
+                    progressRate,
+                    goal.getStartDate(),
+                    goal.getEndDate()
+            );
+        }).toList();
+
+
     }
 
 

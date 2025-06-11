@@ -49,6 +49,27 @@ public class Goal {
     private int progress = 0;
 
 
+    @Column(length = 500)
+    private String goalDetail;
+
+    @Column(length = 500)
+    private String goalReason;
+
+    @Column(length = 50)
+    private String learningStyle;
+
+
+
+
+    // 추가사항(6/3)
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -90,12 +111,15 @@ public class Goal {
         DAILY, WEEKLY, CUSTOM
     }
 
-    public void updateGoal(String title, RepeatType repeatType, String repeatValue, Category category) {
+    public void updateGoal(String title, RepeatType repeatType, String repeatValue,
+                           Category category, String goalDetail, String goalReason, String learningStyle) {
         this.title = title;
         this.repeatType = repeatType;
         this.repeatValue = repeatValue;
         this.category = category;
-        this.onUpdate();
+        this.goalDetail = goalDetail;
+        this.goalReason = goalReason;
+        this.learningStyle = learningStyle;
     }
 
     public void complete() {

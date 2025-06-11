@@ -32,6 +32,11 @@ public class UserService {
     // 인증 코드 저장
     private final Map<String, VerificationCodeData> verificationCodeStore = new ConcurrentHashMap<>();
 
+    public String getEmailFromToken(String token) {
+        return jwtTokenProvider.getEmailFromToken(token);
+    }
+
+
     private static class VerificationCodeData {
         private final String code;
         private final long timestamp;
@@ -89,41 +94,36 @@ public class UserService {
 
         if (user == null) {
             log.warn("[로그인 실패] 존재하지 않는 이메일: {}", request.getEmail());
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
 
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             int failCount = Optional.ofNullable(user.getLoginFailCount()).orElse(0) + 1;
             user.setLoginFailCount(failCount);
             userRepository.save(user);
 
-            log.warn("[로그인 실패] 이메일 : {}, 실패 횟수: {}", user.getEmail(), failCount);
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다. (" + failCount + "회 실패)");
+            log.warn("[로그인 실패] 비밀번호 불일치. 이메일: {}, 실패 횟수: {}", user.getEmail(), failCount);
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다. (" + failCount + "회 실패)");
         }
 
         if (user.getStatus() == UserStatus.DELETED) {
-            throw new IllegalArgumentException("탈퇴한 게정입니다.");
+            throw new IllegalArgumentException("탈퇴한 계정입니다.");
         }
 
         user.setLoginFailCount(0);
         userRepository.save(user);
 
-        System.out.println("입력 비번: " + request.getPassword());
-        System.out.println("DB 비번: " + user.getPassword());
-        System.out.println("matches? " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
-
-
         return user;
     }
+
 
     public User save(User user) {
         return userRepository.save(user);
     }
 
     public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.existsByEmailAndStatus(email, UserStatus.ACTIVE);
     }
-
 
 
 
@@ -133,21 +133,22 @@ public class UserService {
 
     @Transactional
     public void deleteByEmail(String email) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
         userTokenService.deleteByUserId(user.getId());
 
         user.setStatus(UserStatus.DELETED);
-        userRepository.delete(user);
+        userRepository.save(user);
     }
 
     public boolean existsByNickname(String nickname) {
-        return userRepository.findByNickname(nickname)
-                .filter(user -> user.getStatus() != UserStatus.DELETED)
-                .isPresent();
+        return userRepository.findByNicknameAndStatus(nickname, UserStatus.ACTIVE).isPresent();
     }
+
 
 
 

@@ -68,6 +68,7 @@ public class GoalLog {
         this.modifiedPerson = "system";
     }
 
+    @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
         this.modifiedPerson = "system";
@@ -82,4 +83,15 @@ public class GoalLog {
     public boolean isChecked() {
         return Boolean.TRUE.equals(this.isChecked);
     }
+
+    public void setChecked(boolean checked) {
+        this.isChecked = checked;
+    }
+
+    public void uncheck() {
+        this.isChecked = false;
+        this.onUpdate();
+    }
+
+
 }

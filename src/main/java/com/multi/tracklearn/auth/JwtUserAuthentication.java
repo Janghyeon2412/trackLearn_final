@@ -1,5 +1,6 @@
 package com.multi.tracklearn.auth;
 
+import com.multi.tracklearn.domain.User;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -7,17 +8,17 @@ import java.util.Collections;
 
 public class JwtUserAuthentication extends AbstractAuthenticationToken {
 
-    private final String email;
+    private final User user;
 
-    public JwtUserAuthentication(String email) {
+    public JwtUserAuthentication(User user) {
         super(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-
-        this.email = email;
+        this.user = user;
         setAuthenticated(true);
     }
 
+
     public String getEmail() {
-        return email;
+        return user.getEmail();
     }
 
     @Override
@@ -27,7 +28,6 @@ public class JwtUserAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return email;
+        return user;
     }
-
 }

@@ -20,3 +20,23 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
     cache: false
+
+  ai:
+    openai:
+      api-key: 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
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: janggahyeon3@gmail.com
+    password: vkfh lkoa ioou rkpq
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

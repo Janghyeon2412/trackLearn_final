@@ -1,0 +1,192 @@
+.container {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 2rem;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: #eee;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.tab-button.active {
+    background-color: #ff6b35;
+    color: white;
+}
+
+.tab-section {
+    display: none;
+}
+
+.tab-section.active {
+    display: block;
+}
+
+.chart-block {
+    margin-bottom: 2rem;
+}
+
+
+
+.gpt-section {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.gpt-chart, .gpt-ment-list {
+    flex: 1;
+    min-width: 300px;
+}
+
+#gptMentList li {
+    background: #f0f0f0;
+    margin-bottom: 0.5rem;
+    padding: 0.8rem;
+    border-radius: 10px;
+}
+
+
+.gpt-section {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.gpt-chart, .gpt-ment-list {
+    flex: 1;
+    min-width: 300px;
+}
+
+#gptMentList li {
+    background: #f0f0f0;
+    margin-bottom: 0.5rem;
+    padding: 0.8rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.gpt-summary-item {
+    background-color: #f2f2f2;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+}
+
+.date-range-label {
+    font-size: 0.9rem;
+    color: #888;
+    margin-left: 1rem;
+}
+
+.monthly-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.monthly-header h3 {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.month-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.month-nav button {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.month-nav button:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
+}
+
+#monthlyDateLabel {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #222;
+}
+
+.chart-block {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+}
+
+.monthly-summary li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #ddd;
+    padding: 4px 0;
+}
+
+.monthly-summary b {
+    color: #222;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.section-header h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.date-range-label,
+#monthlyDateLabel {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+/* ✅ 요약 영역 */
+.weekly-summary ul,
+.monthly-summary ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    border-top: 1px dashed #ddd;
+}
+
+.weekly-summary li,
+.monthly-summary li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px dashed #eee;
+    font-size: 1rem;
+    color: #333;
+}

@@ -7,10 +7,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -23,39 +27,60 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = resolveToken(request);
-        if (token != null) {
-            if (jwtTokenProvider.validateToken(token)) {
-                String email = jwtTokenProvider.getEmailFromToken(token);
-                JwtUserAuthentication authentication = new JwtUserAuthentication(email);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                // 액세스 토큰 만료 시 리프레시 토큰으로 재발급 시도
-                String refreshToken = extractRefreshTokenFromCookie(request); // 아래 함수 직접 정의
-                if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
-                    String email = jwtTokenProvider.getEmailFromToken(refreshToken);
-                    User user = userRepository.findByEmail(email);
-                    String newAccessToken = jwtTokenProvider.generateToken(user);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-                    // 응답에 새 액세스 토큰 설정 (쿠키로도 가능)
+        System.out.println("JwtAuthenticationFilter");
+
+        String token = resolveToken(request);
+
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            System.out.println("accessToken 유효");
+
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            User user = userRepository.findByEmail(email);
+
+            if (user != null) {
+                JwtUserAuthentication authentication = new JwtUserAuthentication(user);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            }
+
+
+        } else {
+            System.out.println("accessToken 없음");
+
+            String refreshToken = extractRefreshTokenFromCookie(request);
+            System.out.println("refreshToken from cookie");
+
+            if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
+                System.out.println("refreshToken 유효");
+
+                String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+                User user = userRepository.findByEmail(email);
+
+                if (user != null) {
+                    String newAccessToken = jwtTokenProvider.generateToken(user);
+                    System.out.println("accessToken 재발급 성공");
+
                     Cookie newCookie = new Cookie("accessToken", newAccessToken);
                     newCookie.setHttpOnly(true);
                     newCookie.setPath("/");
-                    newCookie.setMaxAge(60 * 60 * 2); // 2시간
+                    newCookie.setMaxAge(60 * 60 * 2);
                     response.addCookie(newCookie);
 
-                    // SecurityContext 갱신
-                    JwtUserAuthentication authentication = new JwtUserAuthentication(email);
+                    JwtUserAuthentication authentication = new JwtUserAuthentication(user);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+            } else {
+                System.out.println("refreshToken 없음");
             }
         }
 
-
-
         filterChain.doFilter(request, response);
     }
+
+
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() == null) return null;
@@ -70,6 +95,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
+        System.out.println("🧪 [resolveToken] Authorization Header: " + bearer);
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                System.out.println("🍪 [resolveToken] Cookie: " + cookie.getName() + " = " + cookie.getValue());
+            }
+        } else {
+            System.out.println("🚨 [resolveToken] request.getCookies() is null");
+        }
+
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
@@ -81,6 +116,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         }
+
         return null;
     }
+
+
 }

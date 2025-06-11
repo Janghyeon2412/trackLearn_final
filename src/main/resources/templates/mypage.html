@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>마이페이지</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/mypage.css">
+    <script src="/js/toast.js"></script>
+    <script src="/js/feedback-notify.js"></script>
+
+    <script src="/js/notification.js" defer></script>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="mypage-container">
+    <h2>마이페이지</h2>
+
+    <!-- 🔹 프로필 영역 -->
+    <section class="profile-section card">
+        <h3>내 계정 정보</h3>
+        <div class="info-grid">
+            <p><strong>닉네임:</strong> <span id="nickname"></span></p>
+            <p><strong>이메일:</strong> <span id="email"></span></p>
+            <p><strong>가입일:</strong> <span id="joinDate"></span></p>
+        </div>
+    </section>
+
+    <section class="stats-section card">
+        <h3>학습 통계</h3>
+        <ul class="stats-list">
+            <li><span>작성한 일지 수</span><strong id="diaryCount">-</strong></li>
+            <li><span>총 학습 시간</span><strong id="totalTime">-</strong></li>
+            <li><span>평균 만족도</span><strong id="avgSatisfaction">-</strong></li>
+        </ul>
+    </section>
+
+    <section class="goal-section card">
+        <h3>최근 달성한 목표</h3>
+        <ul id="recentGoals" class="goal-list">
+            <!-- JS로 동적 렌더링 -->
+        </ul>
+    </section>
+
+</main>
+
+<script src="/js/mypage.js"></script>
+</body>
+</html>

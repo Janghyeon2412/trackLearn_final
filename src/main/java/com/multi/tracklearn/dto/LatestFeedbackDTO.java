@@ -7,6 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class LatestFeedbackDTO {
 
+    private Long diaryId;
     private String date;
     private String feedbackContent;
     private String diaryTitle;

@@ -36,14 +36,16 @@ public class ViewController {
     private final UserTokenService userTokenService;
     private final DiaryService diaryService;
     private final GoalService goalService;
+    private final UserSettingService userSettingService;
 
-    public ViewController(CategoryService categoryService, UserService userService, JwtTokenProvider jwtTokenProvider, UserTokenService userTokenService, DiaryService diaryService, GoalService goalService) {
+    public ViewController(CategoryService categoryService, UserService userService, JwtTokenProvider jwtTokenProvider, UserTokenService userTokenService, DiaryService diaryService, GoalService goalService, UserSettingService userSettingService) {
         this.categoryService = categoryService;
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userTokenService = userTokenService;
         this.diaryService = diaryService;
         this.goalService = goalService;
+        this.userSettingService = userSettingService;
     }
 
     @GetMapping("/signup/step1")
@@ -159,21 +161,15 @@ public class ViewController {
 
 
     @GetMapping("/main")
-    public String showMainPage(@AuthenticationPrincipal String email, Model model) {
-        if (email == null || email.isBlank()) {
+    public String showMainPage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) {
             return "redirect:/login";
         }
 
-        Optional<User> optionalUser = userService.findOptionalByEmail(email);
-        if (!optionalUser.isPresent()) {
-            return "redirect:/login"; // 또는 에러 페이지로
-        }
-
-        User user = optionalUser.get();
         model.addAttribute("nickname", user.getNickname());
-
         return "dashboard/main";
     }
+
 
 
     @GetMapping("/test")
@@ -182,50 +178,43 @@ public class ViewController {
     }
 
     @GetMapping("/diary/write")
-    public String showDiaryWritePage(@AuthenticationPrincipal String email, Model model) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    public String showDiaryWritePage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) {
+            return "redirect:/login";
+        }
 
         model.addAttribute("nickname", user.getNickname());
-        model.addAttribute("todayGoals", goalService.getTodayGoals(email));
-
-        // ⬅️ 이 한 줄 추가
+        model.addAttribute("todayGoals", goalService.getTodayGoals(user.getEmail()));
         model.addAttribute("diaryEdit", new DiaryEditDTO());
+        model.addAttribute("userSetting", userSettingService.getSetting(user.getId()));
 
         return "diary/write";
     }
 
 
 
+
+
     @GetMapping("/diary/history")
-    public String showDiaryHistoryPage(@AuthenticationPrincipal String email, Model model) {
-        if (email == null || email.isBlank()) {
+    public String showDiaryHistoryPage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) {
             return "redirect:/login";
         }
 
-        Optional<User> optionalUser = userService.findOptionalByEmail(email);
-        if (optionalUser.isEmpty()) {
-            return "redirect:/login";
-        }
-
-        model.addAttribute("nickname", optionalUser.get().getNickname());
+        model.addAttribute("nickname", user.getNickname());
         return "diary/diary-list";
     }
 
+
     @GetMapping("/diary/edit/{goalLogId}")
     public String editDiaryForm(@PathVariable Long goalLogId,
-                                @AuthenticationPrincipal String email,
+                                @AuthenticationPrincipal User user,
                                 Model model) {
+        if (user == null) {
+            return "redirect:/login";
+        }
 
-        System.out.println(">>> [editDiaryForm] goalLogId: " + goalLogId);
-        System.out.println(">>> [editDiaryForm] email: " + email);
-
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        System.out.println(">>> [editDiaryForm] userId: " + user.getId());
-
-        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, email);
+        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, user.getEmail());
 
         model.addAttribute("nickname", user.getNickname());
         model.addAttribute("diaryEdit", dto);
@@ -236,19 +225,44 @@ public class ViewController {
 
     @GetMapping("/diary/detail/{diaryId}")
     public String showDiaryDetail(@PathVariable Long diaryId,
-                                  Authentication authentication,
+                                  @AuthenticationPrincipal User user,
                                   Model model) {
-        if (authentication == null || !(authentication instanceof JwtUserAuthentication)) {
+        if (user == null) {
             return "redirect:/login";
         }
 
-        JwtUserAuthentication auth = (JwtUserAuthentication) authentication;
-        String email = auth.getEmail();
-
-        DiaryDetailDTO dto = diaryService.getDiaryDetail(diaryId, email);
+        DiaryDetailDTO dto = diaryService.getDiaryDetail(diaryId, user.getEmail());
         model.addAttribute("diary", dto);
 
         return "diary/detail";
     }
+
+
+    @Controller
+    public class StatsPageController {
+
+        @GetMapping("/stats")
+        public String showStatsPage(@AuthenticationPrincipal User user, Model model) {
+            if (user == null) return "redirect:/login";
+            model.addAttribute("nickname", user.getNickname());
+            return "stats";
+        }
+
+    }
+
+    @GetMapping("/mypage")
+    public String mypage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) return "redirect:/login";
+        model.addAttribute("nickname", user.getNickname());
+        return "mypage";
+    }
+
+    @GetMapping("/settings")
+    public String showSettingsPage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) return "redirect:/login";
+        model.addAttribute("nickname", user.getNickname());
+        return "settings";
+    }
+
 
 }

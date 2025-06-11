@@ -150,3 +150,48 @@
     pointer-events: none;
     opacity: 0.5;
 }
+
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.4rem;
+}
+
+textarea.form-textarea {
+    font-family: inherit;               /* 입력칸과 같은 폰트 */
+    font-size: 1rem;                    /* 크기 통일 */
+    padding: 0.6rem 0.8rem;             /* 위아래/좌우 여백 */
+    border: 1px solid #ccc;
+    border-radius: 6px;                 /* input과 동일한 둥근 정도 */
+    box-sizing: border-box;
+    width: 100%;
+    line-height: 1.5;
+    background-color: white;
+    resize: vertical;
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.goal-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.goal-category {
+    font-size: 0.95rem;
+    color: #666;
+    text-align: right;
+}

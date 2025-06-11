@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>학습 통계</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/statistics.css">
+    <script src="/js/toast.js"></script>
+    <script src="/js/feedback-notify.js"></script>
+    <script src="/js/notification.js" defer></script>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container">
+    <h2>학습 통계</h2>
+
+    <!-- ✅ 탭 -->
+    <div class="tab-buttons">
+        <button class="tab-button active" data-tab="weekly">주간 통계</button>
+        <button class="tab-button" data-tab="monthly">월간 통계</button>
+    </div>
+
+    <!-- ✅ 주간 통계 -->
+    <section id="weeklyTab" class="tab-section active">
+        <div class="section-header">
+            <h3>주간 학습 시간</h3>
+            <span id="weekRange" class="date-range-label"></span>
+        </div>
+
+        <div class="chart-block">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+
+        <div class="weekly-summary">
+            <ul>
+                <li><b>총 학습 시간:</b> <span id="totalTime">-</span></li>
+                <li><b>작성 일지 수:</b> <span id="entryCount">-</span></li>
+                <li><b>일평균 학습 시간:</b> <span id="avgTime">-</span></li>
+                <li><b>만족도 최고일:</b> <span id="bestDay">-</span></li>
+                <li><b>주간 목표 달성률:</b> <span id="achievementRate">-</span></li>
+            </ul>
+        </div>
+
+        <div class="gpt-section">
+            <div class="gpt-chart">
+                <h4>GPT 유형 비율</h4>
+                <canvas id="gptTypeChart"></canvas>
+            </div>
+            <div class="gpt-ment-list">
+                <h4>GPT 요약 멘트</h4>
+                <ul id="gptMentList"></ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ✅ 월간 통계 -->
+    <section id="monthlyTab" class="tab-section">
+        <div class="section-header">
+            <h3>월간 학습 시간</h3>
+            <div class="month-nav">
+                <button id="prevMonthBtn">◀</button>
+                <span id="monthlyDateLabel">-</span>
+                <button id="nextMonthBtn">▶</button>
+            </div>
+        </div>
+
+        <div class="chart-block">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+
+        <div class="monthly-summary">
+            <ul>
+                <li><b>총 학습 시간:</b> <span id="monthlyTotalTime">-</span></li>
+                <li><b>작성 일지 수:</b> <span id="monthlyEntryCount">-</span></li>
+                <li><b>일평균 학습 시간:</b> <span id="monthlyAvgTime">-</span></li>
+                <li><b>만족도 최고일:</b> <span id="monthlyBestDay">-</span></li>
+                <li><b>월간 목표 달성률:</b> <span id="monthlyAchievementRate">-</span></li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/stats.js"></script>
+</body>
+</html>

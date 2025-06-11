@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>목표 현황</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/goal-status.css">
+
+    <script src="/js/feedback-notify.js"></script>
+
+    <script src="/js/notification.js" defer></script>
+
+
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container">
+    <h2>목표 현황</h2>
+
+    <!-- 🔹 날짜 선택 영역 -->
+    <div class="date-filter">
+        <label>시작일: <input type="date" id="startDate" th:value="${startDate}"></label>
+        <label>종료일: <input type="date" id="endDate" th:value="${endDate}"></label>
+        <button id="loadStatsBtn">목표 조회</button>
+    </div>
+
+    <!-- 🔹 통계 테이블 -->
+    <table id="statsTable">
+        <thead>
+        <tr>
+            <th>제목</th>
+            <th>카테고리</th>
+            <th>반복</th>
+            <th>기간</th>
+            <th>총 횟수</th>
+            <th>완료</th>
+            <th>상태</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- JS에서 동적으로 채움 -->
+        </tbody>
+    </table>
+</main>
+
+<script src="/js/goal-status.js"></script>
+</body>
+</html>

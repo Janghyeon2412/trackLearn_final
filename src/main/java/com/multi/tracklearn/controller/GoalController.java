@@ -1,5 +1,6 @@
 package com.multi.tracklearn.controller;
 
+import com.multi.tracklearn.auth.JwtUserAuthentication;
 import com.multi.tracklearn.domain.Category;
 import com.multi.tracklearn.domain.Goal;
 import com.multi.tracklearn.domain.User;
@@ -13,6 +14,7 @@ import com.multi.tracklearn.service.GoalService;
 import com.multi.tracklearn.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,84 +37,88 @@ public class GoalController {
     private final GoalRepository goalRepository;
     private final DiaryService diaryService;
 
-
     @PostMapping
-    public ResponseEntity<?> createGoal(@AuthenticationPrincipal String email, @RequestBody GoalCreateDTO goalCreateDTO) {
-        goalService.createGoal(email, goalCreateDTO);
-
+    public ResponseEntity<?> createGoal(Authentication authentication, @RequestBody GoalCreateDTO goalCreateDTO) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        goalService.createGoal(auth.getEmail(), goalCreateDTO);
         return ResponseEntity.ok("목표가 저장되었습니다.");
     }
 
     @GetMapping
-    public ResponseEntity<List<GoalListDTO>> getGoals(@AuthenticationPrincipal String email) {
-        return ResponseEntity.ok(goalService.getGoals(email));
+    public ResponseEntity<List<GoalListDTO>> getGoals(Authentication authentication) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(goalService.getGoals(auth.getEmail()));
     }
-
 
     @GetMapping("/today")
     public ResponseEntity<List<TodayGoalDTO>> getTodayGoals(Authentication authentication) {
-        String email = (String) authentication.getPrincipal();
-        return ResponseEntity.ok(goalService.getTodayGoals(email));
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(goalService.getTodayGoals(auth.getEmail()));
     }
 
-
-
-
     @PatchMapping("/{goalId}")
-    public ResponseEntity<?> updateGoal(@AuthenticationPrincipal String email, @PathVariable Long goalId, @RequestBody GoalUpdateDTO goalUpdateDTO) {
-        goalService.updateGoal(email, goalId, goalUpdateDTO);
+    public ResponseEntity<?> updateGoal(Authentication authentication, @PathVariable Long goalId, @RequestBody GoalUpdateDTO goalUpdateDTO) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        goalService.updateGoal(auth.getEmail(), goalId, goalUpdateDTO);
         return ResponseEntity.ok("목표가 수정되었습니다.");
     }
 
-
-
     @DeleteMapping("/{goalId}")
-    public ResponseEntity<String> deleteGoal(@AuthenticationPrincipal String email, @PathVariable Long goalId) {
-        goalService.softDeleteGoal(email, goalId);  // 서비스에서 soft delete 처리
+    public ResponseEntity<String> deleteGoal(Authentication authentication, @PathVariable Long goalId) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        goalService.softDeleteGoal(auth.getEmail(), goalId);
         return ResponseEntity.ok("목표가 삭제되었습니다");
     }
 
-
     @PatchMapping("/{goalId}/complete")
-    public ResponseEntity<?> completeGoal(@AuthenticationPrincipal String email, @PathVariable Long goalId) {
-        goalService.completeGoal(email, goalId);
+    public ResponseEntity<?> completeGoal(Authentication authentication, @PathVariable Long goalId) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        goalService.completeGoal(auth.getEmail(), goalId);
         return ResponseEntity.ok("목표 완료 처리됨");
     }
 
-
-
-
     @GetMapping("/paged")
     public ResponseEntity<List<GoalListDTO>> getGoalsPaged(
-            @AuthenticationPrincipal String email,
+            Authentication authentication,
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(goalService.getGoalsPaged(email, cursor, size));
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(goalService.getGoalsPaged(auth.getEmail(), cursor, size));
     }
-
-
 
     @GetMapping("/list")
     public ResponseEntity<List<GoalListDTO>> getPagedGoals(
-            @AuthenticationPrincipal String email,
+            Authentication authentication,
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "5") int size) {
 
-        if (email == null || email.isBlank()) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        User user = userService.findByEmail(email)
+        User user = userService.findByEmail(auth.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
         List<Goal> goals;
 
         if (cursor == null) {
-            // 최신순 정렬된 첫 페이지
             goals = goalRepository.findByUserAndDeletedFalseOrderByIdDesc(user, PageRequest.of(0, size));
         } else {
-            // cursor보다 작은 ID 중 최신순 정렬
             goals = goalRepository.findByUserAndIdLessThanAndDeletedFalseOrderByIdDesc(user, cursor, PageRequest.of(0, size));
         }
 
@@ -122,15 +129,28 @@ public class GoalController {
         return ResponseEntity.ok(result);
     }
 
-
     @GetMapping("/edit")
     public String editGoalForm(@RequestParam("goalLogId") Long goalLogId,
-                               @AuthenticationPrincipal String email,
+                               Authentication authentication,
                                Model model) {
-        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, email);
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return "redirect:/login";
+        }
+        DiaryEditDTO dto = diaryService.prepareEditForm(goalLogId, auth.getEmail());
         model.addAttribute("editDTO", dto);
-        return "goal-edit"; // ← 수정화면 HTML 경로
+        return "goal-edit";
     }
 
-
+    @GetMapping("/statistics")
+    public ResponseEntity<List<GoalStatisticsDTO>> getGoalStatistics(
+            Authentication authentication,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        if (!(authentication instanceof JwtUserAuthentication auth)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<GoalStatisticsDTO> stats = goalService.getGoalStatistics(auth.getEmail(), startDate, endDate);
+        return ResponseEntity.ok(stats);
+    }
 }

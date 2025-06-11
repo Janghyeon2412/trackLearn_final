@@ -26,4 +26,9 @@ public class GoalUpdateDTO {
     private String repeatType;
     private String repeatValue;
 
+    private String goalDetail;
+    private String goalReason;
+    private String learningStyle;
+
+
 }

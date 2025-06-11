@@ -31,8 +31,18 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     @Query("SELECT d FROM Diary d WHERE d.user = :user AND d.date = :date")
     Optional<Diary> findByUserAndDate(@Param("user") User user, @Param("date") LocalDate date);
 
-    @Query("SELECT d FROM Diary d WHERE :goalLogId IN elements(d.goalLogIds) AND d.user = :user")
+    @Query("SELECT d FROM Diary d WHERE :goalLogId MEMBER OF d.goalLogIds AND d.user = :user")
     Optional<Diary> findByUserAndGoalLogId(@Param("user") User user, @Param("goalLogId") Long goalLogId);
 
+    boolean existsByUserAndDate(User user, LocalDate date);
+
+    @Query("SELECT d FROM Diary d JOIN d.goalLogIds ids WHERE d.user = :user AND ids IN :goalLogIds")
+    List<Diary> findByUserAndGoalLogIds(@Param("user") User user, @Param("goalLogIds") List<Long> goalLogIds);
+
+
+    @Query("SELECT d FROM Diary d LEFT JOIN FETCH d.goalLogIds WHERE d.id = :id")
+    Optional<Diary> findWithGoalLogIds(@Param("id") Long id);
+
+    List<Diary> findByUserId(Long userId);
 
 }

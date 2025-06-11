@@ -6,6 +6,11 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/goal.css">
   <link rel="stylesheet" href="/css/header.css">
+
+  <script src="/js/feedback-notify.js"></script>
+
+  <script src="/js/notification.js" defer></script>
+
 </head>
 
 
@@ -43,13 +48,50 @@
 
       <div id="repeatValueInput" style="display: none;">
         <label for="repeatValue">반복 횟수</label>
-        <input type="text" id="repeatValue" />
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>주</span>
+          <input
+                  type="text"
+                  id="repeatValue"
+                  style="width: 80px; padding: 4px;"
+                  inputmode="numeric"
+                  pattern="[1-6]"
+                  maxlength="1"
+          />
+          <span>회</span>
+        </div>
+        <small style="color: #999;">1~6 사이 숫자만 입력 가능합니다.</small>
       </div>
 
       <label>카테고리</label>
       <select id="category" th:field="*{categoryId}" required>
         <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
       </select>
+
+
+      <div class="form-group">
+        <label for="goalDetail" class="form-label">목표 상세 설명 (선택사항)</label>
+        <textarea id="goalDetail" name="goalDetail" th:field="*{goalDetail}" class="form-textarea"
+                  placeholder="이번 주 학습할 내용이나 방식에 대한 구체적인 설명을 적어보세요"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="goalReason" class="form-label">이 목표를 설정한 이유는 무엇인가요? (선택사항)</label>
+        <textarea id="goalReason" name="goalReason" th:field="*{goalReason}" class="form-textarea"
+                  placeholder="예:시험 대비, 개념 보완, 자기주도 학습 등"></textarea>
+      </div>
+
+
+      <!-- 🔹 선호 학습 방식 -->
+      <div class="form-section">
+        <label>선호하는 학습 방식</label>
+        <div>
+          <label><input type="radio" th:field="*{learningStyle}" value="이론 중심"> 이론 중심</label>
+          <label><input type="radio" th:field="*{learningStyle}" value="실습 중심"> 실습 중심</label>
+          <label><input type="radio" th:field="*{learningStyle}" value="문제풀이 중심"> 문제풀이 중심</label>
+        </div>
+      </div>
+
 
       <button type="submit" class="button save-btn">저장</button>
     </form>
@@ -62,11 +104,14 @@
            th:class="'goal-card color-' + ${iterStat.index % 3}"
            th:style="${goal.isCompleted} ? 'opacity: 0.5;' : ''"
            th:attr="data-id=${goal.id},
-                    data-title=${goal.title},
-                    data-repeattype=${goal.repeatType},
-                    data-repeatvalue=${goal.repeatValue},
-                    data-categoryid=${goal.categoryId},
-                    data-completed=${goal.isCompleted}">
+              data-title=${goal.title},
+              data-repeattype=${goal.repeatType},
+              data-repeatvalue=${goal.repeatValue},
+              data-categoryid=${goal.categoryId},
+              data-completed=${goal.isCompleted},
+              data-goaldetail=${goal.goalDetail},
+              data-goalreason=${goal.goalReason},
+              data-learningstyle=${goal.learningStyle}">
 
 
         <div class="goal-header">
@@ -79,7 +124,7 @@
               <span th:if="${goal.repeatType == 'CUSTOM'}" th:text="' · 반복: 주 ' + ${goal.repeatValue} + '회'"></span>
             </div>
           </div>
-          <div class="goal-category" th:text="${goal.categoryName}"></div>
+          <div class="goal-category" th:text="${goal.categoryName + ' / ' + (goal.learningStyle != null ? goal.learningStyle : '미지정')}"></div>
         </div>
 
         <div class="goal-percent" th:text="${goal.progress + '%'}"></div>
@@ -149,9 +194,23 @@
         document.querySelector("#title").value = title;
         document.querySelector(`input[name='repeatType'][value='${repeatType}']`).checked = true;
 
+
         const repeatInputBlock = document.querySelector("#repeatValueInput");
         const repeatValueHidden = document.querySelector("#repeatValueHidden");
         const repeatValueVisible = document.querySelector("#repeatValue");
+
+        const goalDetail = goalCard.getAttribute("data-goaldetail");
+        const goalReason = goalCard.getAttribute("data-goalreason");
+        const learningStyle = goalCard.getAttribute("data-learningstyle");
+
+        document.querySelector("#goalDetail").value = goalDetail;
+        document.querySelector("#goalReason").value = goalReason;
+
+        if (learningStyle) {
+          const styleRadio = document.querySelector(`input[name='learningStyle'][value='${learningStyle}']`);
+          if (styleRadio) styleRadio.checked = true;
+        }
+
 
         if (repeatType === "CUSTOM") {
           repeatInputBlock.style.display = "block";
@@ -271,33 +330,40 @@
           div.setAttribute('data-categoryid', goal.categoryId);
           div.setAttribute('data-completed', goal.isCompleted);
 
+          div.setAttribute('data-goaldetail', goal.goalDetail);
+          div.setAttribute('data-goalreason', goal.goalReason);
+          div.setAttribute('data-learningstyle', goal.learningStyle);
+
           div.innerHTML = `
-        <div class="goal-header">
-          <div class="goal-left">
-            <div class="goal-title">${goal.title}</div>
-            <div class="goal-meta">
-              <span>${goal.createdValue}</span>
-              <span>${
+  <div class="goal-header">
+    <div class="goal-left">
+      <div class="goal-title">${goal.title}</div>
+      <div class="goal-meta">
+        <span>${goal.createdValue}</span>
+        <span>${
                   goal.repeatType === 'DAILY' ? ' · 반복: 매일' :
                           goal.repeatType === 'WEEKLY' ? ' · 반복: 주 3회' :
                                   ` · 반복: 주 ${goal.repeatValue}회`
           }</span>
-            </div>
-          </div>
-          <div class="goal-category">${goal.categoryName}</div>
-        </div>
-        <div class="goal-percent">${goal.progress}%</div>
-        <div class="progress-bar">
-          <div class="progress" style="width:${goal.progress}%;"></div>
-        </div>
-        <div class="goal-actions">
-          <button class="button edit-btn" ${goal.isCompleted ? 'disabled' : ''}>수정</button>
-          <button class="button delete-btn" ${goal.isCompleted ? 'disabled' : ''}>
-            ${goal.isCompleted ? '종료됨' : '종료'}
-          </button>
-          <button class="button remove-btn" ${goal.isCompleted ? 'disabled' : ''}>삭제</button>
-        </div>
-      `;
+      </div>
+    </div>
+    <div class="goal-right">
+      <div class="goal-category">${goal.categoryName} / ${goal.learningStyle || '미지정'}</div>
+    </div>
+  </div>
+  <div class="goal-percent">${goal.progress}%</div>
+  <div class="progress-bar">
+    <div class="progress" style="width:${goal.progress}%;"></div>
+  </div>
+  <div class="goal-actions">
+    <button class="button edit-btn" ${goal.isCompleted ? 'disabled' : ''}>수정</button>
+    <button class="button delete-btn" ${goal.isCompleted ? 'disabled' : ''}>
+      ${goal.isCompleted ? '종료됨' : '종료'}
+    </button>
+    <button class="button remove-btn" ${goal.isCompleted ? 'disabled' : ''}>삭제</button>
+  </div>
+`;
+
 
           document.getElementById('goal-list-container').appendChild(div);
         });
@@ -324,6 +390,58 @@
         loadMoreGoals();
       }
     });
+
+
+    document.querySelector("form").addEventListener("submit", async function (e) {
+      const goalIdInput = document.getElementById("goalId");
+
+      if (goalIdInput) {
+        // 수정 모드인 경우 PATCH 요청
+        e.preventDefault();
+
+        const goalId = goalIdInput.value;
+        const title = document.querySelector("#title").value;
+        const repeatType = document.querySelector("input[name='repeatType']:checked").value;
+        const repeatValue = document.querySelector("#repeatValueHidden").value;
+        const categoryId = document.querySelector("#category").value;
+        const goalDetail = document.querySelector("#goalDetail").value;
+        const goalReason = document.querySelector("#goalReason").value;
+        const learningStyleInput = document.querySelector("input[name='learningStyle']:checked");
+        const learningStyle = learningStyleInput ? learningStyleInput.value : null;
+
+        const body = {
+          goalId: parseInt(goalId),
+          title,
+          repeatType,
+          repeatValue,
+          categoryId: parseInt(categoryId),
+          goalDetail,
+          goalReason,
+          learningStyle
+        };
+
+        try {
+          const res = await fetch(`/api/goals/${goalId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          });
+
+          if (res.ok) {
+            alert("목표가 수정되었습니다.");
+            location.reload();
+          } else {
+            alert("수정 실패: " + (await res.text()));
+          }
+        } catch (err) {
+          alert("오류 발생: " + err.message);
+        }
+      }
+    });
+
+
 
   });
 </script>

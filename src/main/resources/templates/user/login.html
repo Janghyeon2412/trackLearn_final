@@ -78,6 +78,7 @@
 
                 if (response.ok) {
                     const { accessToken, refreshToken } = await response.json();
+                    localStorage.setItem("accessToken", accessToken);
                     sessionStorage.setItem("accessToken", accessToken);
                     if (autoLogin) {
                         localStorage.setItem("refreshToken", refreshToken);
@@ -98,7 +99,8 @@
                         alert("메인페이지 접근 실패 (토큰 인증 실패)");
                     }
                 } else {
-                    alert("이메일 또는 비밀번호가 일치하지 않습니다");
+                    const data = await response.json();
+                    alert(data.error || "로그인 실패");
                 }
             } catch (err) {
                 console.error("요청 중 에러 발생:", err);

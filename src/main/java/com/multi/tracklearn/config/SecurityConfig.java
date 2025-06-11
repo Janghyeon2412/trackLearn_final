@@ -1,5 +1,4 @@
 package com.multi.tracklearn.config;
-
 import com.multi.tracklearn.auth.JwtAuthenticationFilter;
 import com.multi.tracklearn.auth.JwtTokenProvider;
 import com.multi.tracklearn.repository.UserRepository;
@@ -11,6 +10,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class  SecurityConfig {
@@ -54,6 +58,9 @@ public class  SecurityConfig {
                                 .requestMatchers("/main").authenticated()
                                 .requestMatchers("/goals/**").authenticated()
                                 .requestMatchers("/diary/write").authenticated()
+                                .requestMatchers("/api/mypage/**").authenticated()
+                                .requestMatchers("/api/diary/**").hasAuthority("ROLE_USER")
+
 
                                 .anyRequest().authenticated()
                 )
@@ -62,4 +69,17 @@ public class  SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true); // 🔥 반드시 true
+        config.setAllowedOrigins(List.of("http://localhost:8081")); // 프론트 주소
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("*")); // optional
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

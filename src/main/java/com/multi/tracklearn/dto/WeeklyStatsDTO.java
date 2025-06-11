@@ -14,4 +14,7 @@ public class WeeklyStatsDTO {
     private double averageSatisfaction;
     private String bestDay;
     private int achievementRate;
+
+    private String startDate;
+    private String endDate;
 }

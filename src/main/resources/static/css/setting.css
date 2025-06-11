@@ -1,0 +1,81 @@
+main.container {
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    font-family: 'Pretendard', sans-serif;
+}
+
+section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    color: #222;
+}
+
+section label,
+section div {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.95rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #ff6b35;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 0.3rem;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #e85d2a;
+}
+
+section a {
+    color: #007bff;
+    text-decoration: none;
+    margin-right: 1rem;
+    font-size: 0.95rem;
+}
+
+section a:hover {
+    text-decoration: underline;
+}
+
+.link-danger {
+    color: #e53935;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    text-decoration: none;
+}
+
+.link-danger:hover {
+    text-decoration: underline;
+}
