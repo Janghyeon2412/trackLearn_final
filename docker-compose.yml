@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:latest
+    container_name: mysql-db
+    volumes:
+      - dbdatamysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: tiger
+      MYSQL_DATABASE: tracklearn
+
+  spring-crud:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spring-crud:1.0
+    container_name: spring-crud-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/tracklearn
+      SPRING_DATASOURCE_USERNAME: tracklearn
+      SPRING_DATASOURCE_PASSWORD: tiger
+volumes:
+  dbdatamysql:
+    external: true

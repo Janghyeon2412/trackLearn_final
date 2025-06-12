@@ -264,5 +264,10 @@ public class ViewController {
         return "settings";
     }
 
+    @GetMapping("/")
+    public String rootRedirect() {
+        return "redirect:/signup/step1";
+    }
+
 
 }

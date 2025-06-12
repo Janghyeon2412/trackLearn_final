@@ -1,21 +1,40 @@
-resource "aws_subnet" "public_1a" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.10.0/24"  # ✅ 기존과 충돌 안 나는 범위
-  availability_zone       = "ca-central-1a"
-  map_public_ip_on_launch = true
 
-  tags = {
-    Name = "tracklearn-subnet-1a"
-  }
+### public subnet ####
+resource "aws_subnet" "sample-subnet-public0110" {
+    vpc_id = aws_vpc.sample-vpc10.id
+    cidr_block = "10.0.0.0/20"
+    availability_zone = "ca-central-1a"
+    map_public_ip_on_launch = "true"
+    tags = {
+      "Name" = "sample-subnet-public0110"
+    } 
 }
 
-resource "aws_subnet" "public_1b" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.20.0/24"  # ✅ 서로 다른 대역
-  availability_zone       = "ca-central-1b"
-  map_public_ip_on_launch = true
+resource "aws_subnet" "sample-subnet-public0210" {
+    vpc_id = aws_vpc.sample-vpc10.id
+    cidr_block = "10.0.16.0/20"
+    availability_zone = "ca-central-1a"
+    map_public_ip_on_launch = "true"
+    tags = {
+      "Name" = "sample-subnet-public0210"
+    } 
+}
 
-  tags = {
-    Name = "tracklearn-subnet-1b"
-  }
+## pirvate subnet
+resource "aws_subnet" "sample-subnet-private0110" {
+    vpc_id = aws_vpc.sample-vpc10.id
+    cidr_block = "10.0.64.0/20"
+    availability_zone = "ca-central-1a"
+    tags = {
+      "Name" = "sample-subnet-private0110"
+    } 
+}
+
+resource "aws_subnet" "sample-subnet-private0210" {
+    vpc_id = aws_vpc.sample-vpc10.id
+    cidr_block = "10.0.80.0/20"
+    availability_zone = "ca-central-1b"
+    tags = {
+      "Name" = "sample-subnet-private0210"
+    } 
 }
