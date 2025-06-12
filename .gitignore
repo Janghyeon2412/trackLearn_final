@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Terraform 캐시 및 상태파일 무시
+.terraform/
+*.tfstate
+*.tfstate.backup
