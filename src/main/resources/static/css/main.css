@@ -1,4 +1,3 @@
-/* 기본 구조 */
 body {
     font-family: 'Pretendard', sans-serif;
     margin: 0;
@@ -58,7 +57,6 @@ h2, h3 {
 }
 
 
-/* 오늘의 목표 카드 */
 .goal-list {
     display: flex;
     flex-direction: column;
@@ -102,7 +100,7 @@ h2, h3 {
     text-align: right;
 }
 
-/* 퍼센트바 */
+
 .progress-bar {
     height: 10px;
     background-color: #eee;
@@ -117,13 +115,11 @@ h2, h3 {
     border-radius: 5px;
 }
 
-/* 색상 변형 */
-.goal-card.color-0 { border-left-color: #4f46e5; } /* indigo */
-.goal-card.color-1 { border-left-color: #10b981; } /* emerald */
-.goal-card.color-2 { border-left-color: #f59e0b; } /* amber */
+.goal-card.color-0 { border-left-color: #4f46e5; }
+.goal-card.color-1 { border-left-color: #10b981; }
+.goal-card.color-2 { border-left-color: #f59e0b; }
 
 
-/* 피드백 리스트 */
 #feedback-list li {
     background: #f1f5f9;
     padding: 0.8rem;
@@ -131,7 +127,6 @@ h2, h3 {
     margin-bottom: 0.5rem;
 }
 
-/* 일정 카드 */
 .schedule-card {
     background-color: #fff;
     border: 1px solid #ddd;
@@ -141,7 +136,6 @@ h2, h3 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* 푸터 */
 footer {
     text-align: center;
     padding: 2rem;

@@ -51,7 +51,7 @@ public class DiaryService {
 
         Diary diary;
 
-        // ✅ 오늘 전체 goalLogId 미리 조회
+
         List<GoalLog> todayLogs = goalLogRepository.findByUserIdAndDate(user.getId(), LocalDate.now());
         List<Long> todayGoalLogIds = todayLogs.stream().map(GoalLog::getId).toList();
 
@@ -79,10 +79,9 @@ public class DiaryService {
             diary.setCreatedPerson(user.getNickname());
         }
 
-        // ✅ 오늘 전체 목표 ID 저장 (중복 없이)
+
         diary.setGoalLogIds(new ArrayList<>(new LinkedHashSet<>(todayGoalLogIds)));
 
-        // ✅ 공통 필드 설정
         diary.setTitle(diarySaveDTO.getTitle());
         diary.setContent(diarySaveDTO.getContent());
         diary.setDifficulty(diarySaveDTO.getDifficulty());
@@ -95,7 +94,7 @@ public class DiaryService {
         diary.setStudyTime(diarySaveDTO.getStudyTime());
         diary.setDate(LocalDate.now());
 
-        // ✅ 회고 보정
+        // 회고 보정
         List<String> retrospectives = diarySaveDTO.getRetrospectives() != null
                 ? new ArrayList<>(diarySaveDTO.getRetrospectives())
                 : new ArrayList<>();
@@ -104,7 +103,7 @@ public class DiaryService {
                 .map(r -> r.length() > 30 ? r.substring(0, 30) : r)
                 .collect(Collectors.toList());
 
-        // ✅ 누락된 회고 저장 로직 (ElementCollection 대상)
+
         if (diary.getRetrospectives() == null) {
             diary.setRetrospectives(new ArrayList<>());
         } else {
@@ -114,7 +113,6 @@ public class DiaryService {
         diaryRepository.save(diary);
 
 
-        // ✅ 체크된 목표 처리
         List<Long> logIds = diarySaveDTO.getCompletedGoalIds();
         if (logIds != null && !logIds.isEmpty()) {
             List<GoalLog> logs = goalLogRepository.findAllById(logIds);
@@ -135,11 +133,9 @@ public class DiaryService {
     // 요약 생성 함수
     private String generateSummary(String content, int maxLength) {
         if (content == null) return "";
-        // 1. 줄바꿈, 탭 제거
         String flat = content.replaceAll("[\\n\\r\\t]+", " ");
-        // 2. 연속 공백 제거
+
         flat = flat.replaceAll(" +", " ").trim();
-        // 3. 길이 자르기
         return flat.length() > maxLength ? flat.substring(0, maxLength) + "..." : flat;
     }
 
@@ -173,7 +169,7 @@ public class DiaryService {
                         diary.getTitle(),
                         diary.getSummary(),
                         diary.getDate().toString(),
-                        "",  // 태그 아직 없으면 빈 문자열로
+                        "",
                         diary.getSatisfaction(),
                         diary.isFavorite(),
                         diary.getContent(),
@@ -258,11 +254,9 @@ public class DiaryService {
                 ? new ArrayList<>(new LinkedHashSet<>(diary.getGoalLogIds()))
                 : new ArrayList<>();
 
-        // ✅ 오늘의 모든 GoalLog 가져오기
-        LocalDate today = diary.getDate(); // 또는 LocalDate.now()
+        LocalDate today = diary.getDate();
         List<GoalLog> todayGoalLogs = goalLogRepository.findByUserIdAndDate(user.getId(), today);
 
-        // ✅ 체크된 ID 기준으로 isChecked 표시
         for (GoalLog log : todayGoalLogs) {
             log.setChecked(checkedGoalLogIds.contains(log.getId()));
         }
@@ -270,7 +264,6 @@ public class DiaryService {
         for (GoalLog log : todayGoalLogs) {
             boolean isChecked = checkedGoalLogIds.contains(log.getId());
             log.setChecked(isChecked);
-            System.out.println("📌 GoalLog ID: " + log.getId() + ", isChecked: " + isChecked);
         }
 
 
@@ -293,16 +286,14 @@ public class DiaryService {
             throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
-        // ✅ 오늘 전체 목표 조회
+        // 오늘 전체 목표 조회
         List<GoalLog> todayLogs = goalLogRepository.findByUserIdAndDate(user.getId(), diary.getDate());
         List<Long> allGoalLogIds = todayLogs.stream().map(GoalLog::getId).toList();
 
-        // ✅ 체크된 목표 ID
         List<Long> checkedGoalIds = dto.getGoalLogIds() != null
                 ? new ArrayList<>(new LinkedHashSet<>(dto.getGoalLogIds()))
                 : new ArrayList<>();
 
-        // ✅ 회고 내용 보정
         List<String> retrospectives = dto.getRetrospectives() != null
                 ? new ArrayList<>(dto.getRetrospectives())
                 : new ArrayList<>();
@@ -316,15 +307,13 @@ public class DiaryService {
                 .map(r -> r.length() > 150 ? r.substring(0, 150) : r)
                 .collect(Collectors.toList());
 
-        // ✅ 회고 리스트 갱신
+        // 회고 리스트
         if (diary.getRetrospectives() == null) {
             diary.setRetrospectives(new ArrayList<>());
         } else {
             diary.getRetrospectives().clear();
         }
         diary.getRetrospectives().addAll(retrospectives);
-
-        // ✅ 필드 업데이트
         diary.setTitle(dto.getTitle());
         diary.setContent(dto.getContent());
         diary.setStudyTime(dto.getStudyTime());
@@ -333,13 +322,10 @@ public class DiaryService {
         diary.setModifiedPerson(user.getNickname());
         diary.setDifficulty(dto.getDifficulty());
         diary.setTomorrowPlan(dto.getTomorrowPlan());
-
-        // ✅ 핵심: 오늘 전체 목표 ID 저장
         diary.setGoalLogIds(new ArrayList<>(allGoalLogIds));
 
         diaryRepository.save(diary);
 
-        // ✅ GoalLog 상태 반영 (isChecked)
         for (GoalLog log : todayLogs) {
             if (checkedGoalIds.contains(log.getId())) {
                 log.markChecked();
@@ -349,7 +335,6 @@ public class DiaryService {
             goalLogRepository.save(log);
         }
 
-        // ✅ 목표 달성률 재계산
         Set<Long> goalIds = todayLogs.stream()
                 .map(log -> log.getGoal().getId())
                 .collect(Collectors.toSet());
@@ -370,7 +355,6 @@ public class DiaryService {
 
         List<GoalLog> goalLogs = goalLogRepository.findByDateAndUserId(goalLog.getDate(), user.getId());
 
-        // ✅ 변경된 쿼리 사용
         Optional<Diary> optionalDiary = diaryRepository.findByUserAndGoalLogId(user, goalLogId);
 
         System.out.println("goalLogId: " + goalLogId);
@@ -395,7 +379,7 @@ public class DiaryService {
         return DiaryEditDTO.fromGoalLogs(goalLogs);
     }
 
-    // 읽기 전용 상세보기
+    // 상세보기
     public DiaryDetailDTO getDiaryDetail(Long diaryId, String email) {
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
@@ -462,13 +446,10 @@ public class DiaryService {
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
 
-        // ✅ goalLog 리스트 불러오기
         List<GoalLog> goalLogs = goalLogRepository.findByDiaryId(diaryId);
 
-        // ✅ GPT 요청 DTO 생성
         GptFeedbackRequestDTO requestDto = GptFeedbackRequestDTO.fromDiary(diary, goalLogs);
 
-        // ✅ prompt 생성
         String prompt = gptFeedbackService.generatePrompt(
                 requestDto.getTitle(),
                 requestDto.getContent(),
@@ -483,7 +464,7 @@ public class DiaryService {
                 requestDto.getTomorrowPlan()
         );
 
-        // ✅ GPT 응답 받기
+        // GPT 응답
         String feedback = gptFeedbackService.getFeedback(
                 requestDto.getTone(),
                 requestDto.getSubject(),
@@ -509,7 +490,6 @@ public class DiaryService {
             }
         }
 
-        // ✅ GPT 프롬프트 구성 및 호출은 공통
         String prompt = gptFeedbackService.generatePrompt(
                 dto.getTitle(),
                 dto.getContent(),
@@ -526,7 +506,6 @@ public class DiaryService {
 
         String response = gptFeedbackService.getFeedback(dto.getTone(), dto.getSubject(), prompt);
 
-        // ✅ diary가 있을 때만 DB 저장
         if (diary != null) {
             List<Feedback> existing = feedbackRepository.findByDiaryId(diary.getId());
             feedbackRepository.deleteAll(existing);

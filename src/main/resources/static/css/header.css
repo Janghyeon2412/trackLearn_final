@@ -16,7 +16,6 @@ body {
     padding: 1rem 2rem;
     background-color: #ff6b35;
 
-    /* 추가: 스크롤 시 고정 */
     position: fixed;
     top: 0;
     left: 0;
@@ -53,7 +52,7 @@ body {
 
 .menu-container {
     position: fixed;
-    top: 64px; /* top-bar 높이 고려 */
+    top: 64px;
     left: 0;
     width: 100%;
     background-color: #ff6b35;
@@ -126,7 +125,7 @@ body {
 
 .mega-menu {
     position: absolute;
-    top: calc(100% - 4px);  /* ✅ 기존 100% → 조금 당기기 */
+    top: calc(100% - 4px);
     left: 0;
     width: 100%;
     background: white;
@@ -140,7 +139,7 @@ body {
 .submenu-wrapper {
     max-width: 1080px;
     margin: 0 auto;
-    display: flex;                 /* ✅ grid → flex */
+    display: flex;
     justify-content: center;
     gap: 3rem;
     text-align: center;
@@ -196,7 +195,7 @@ body {
     border-bottom: 1px solid #eee;
     font-size: 0.92rem;
     display: flex;
-    justify-content: space-between; /* 좌우 정렬 */
+    justify-content: space-between;
     align-items: flex-start;
     transition: background-color 0.2s ease;
 }

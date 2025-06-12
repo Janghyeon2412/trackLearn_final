@@ -95,14 +95,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
-        System.out.println("🧪 [resolveToken] Authorization Header: " + bearer);
+        System.out.println("[resolveToken] Authorization Header: " + bearer);
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                System.out.println("🍪 [resolveToken] Cookie: " + cookie.getName() + " = " + cookie.getValue());
+                System.out.println("[resolveToken] Cookie: " + cookie.getName() + " = " + cookie.getValue());
             }
         } else {
-            System.out.println("🚨 [resolveToken] request.getCookies() is null");
+            System.out.println("[resolveToken] request.getCookies() is null");
         }
 
         if (bearer != null && bearer.startsWith("Bearer ")) {

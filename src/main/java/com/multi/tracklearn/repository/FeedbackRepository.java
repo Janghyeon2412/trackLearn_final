@@ -12,14 +12,14 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<Feedback> findByDiaryId(Long diaryId);
 
     @Query("""
-    SELECT f FROM Feedback f
-    WHERE f.id IN (
-        SELECT MIN(f2.id) FROM Feedback f2
-        WHERE f2.diary.user.id = :userId
-        GROUP BY f2.diary.id
-    )
-    ORDER BY f.createdAt DESC
-""")
+                SELECT f FROM Feedback f
+                WHERE f.id IN (
+                    SELECT MIN(f2.id) FROM Feedback f2
+                    WHERE f2.diary.user.id = :userId
+                    GROUP BY f2.diary.id
+                )
+                ORDER BY f.createdAt DESC
+            """)
     List<Feedback> findFirstFeedbacksPerDiary(@Param("userId") Long userId);
 
 

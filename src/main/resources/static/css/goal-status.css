@@ -15,7 +15,7 @@ h2 {
     color: #333;
 }
 
-/* 🔹 날짜 선택 영역 */
+
 .date-filter {
     display: flex;
     justify-content: center;
@@ -53,7 +53,6 @@ h2 {
     background-color: #e55d2f;
 }
 
-/* 🔹 통계 테이블 */
 table {
     width: 100%;
     border-collapse: collapse;

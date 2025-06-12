@@ -72,7 +72,7 @@ public class SettingController {
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         userRepository.save(user);
 
-        // ✅ 토큰 무효화 (쿠키 삭제)
+        // 토큰 무효화 (쿠키 삭제)
         Cookie accessToken = new Cookie("accessToken", null);
         accessToken.setPath("/");
         accessToken.setMaxAge(0);

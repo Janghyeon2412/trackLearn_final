@@ -30,7 +30,7 @@ public class NotificationController {
     private final UserService userService;
     private final NotificationRepository notificationRepository;
 
-    // ✅ 알림 목록 조회
+    // 알림 목록 조회
     @GetMapping
     public ResponseEntity<List<NotificationResponseDTO>> getUserNotifications(Authentication authentication) {
         if (!(authentication instanceof JwtUserAuthentication auth)) {
@@ -52,7 +52,7 @@ public class NotificationController {
 
 
 
-    // ✅ 알림 읽음 처리 (RESTful 스타일 + PATCH 방식)
+    // 알림 읽음 처리
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id, Authentication authentication) {
         if (authentication == null || !(authentication instanceof JwtUserAuthentication auth)) {

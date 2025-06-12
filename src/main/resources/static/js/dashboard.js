@@ -25,7 +25,7 @@ function renderCalendar() {
                 const res = await fetch(`/api/dashboard/calendar?start=${startDate}&end=${endDate}`);
                 const data = await res.json();
 
-                // 오늘 날짜 (KST 보정)
+                // 오늘 날짜
                 const now = new Date();
                 const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const todayStr = koreaTime.toISOString().split("T")[0];
@@ -34,7 +34,7 @@ function renderCalendar() {
                     const isToday = log.date === todayStr;
 
                     return {
-                        id: log.goalLogId,  // goalLogId 기준
+                        id: log.goalLogId,
                         title: log.title,
                         start: log.date,
                         className: log.goalCompleted ? 'completed' : (log.checked ? 'completed' : 'unchecked'),
@@ -77,12 +77,11 @@ function renderCalendar() {
                 return;
             }
 
-            const isChecked = info.event.extendedProps.isChecked; // 회색 표시
+            const isChecked = info.event.extendedProps.isChecked;
             const diaryId = info.event.extendedProps.diaryId;
             const goalLogId = info.event.id;
 
             if (isChecked) {
-                // ✅ 이 목표는 이미 완료된 상태 (회색) → 아무 것도 안 함
                 return;
             }
 
@@ -101,11 +100,6 @@ function renderCalendar() {
                 alert("일지 이동 실패");
             }
         }
-
-
-
-
-
 
     });
 
@@ -181,7 +175,7 @@ function fetchWeeklyStats() {
         })
         .then((data) => renderWeeklyStats(data))
         .catch((err) => {
-            document.getElementById("stat-summary").innerText = "통계 정보를 불러올 수 없습니다.";
+            document.getElementById("stat-summary");
             console.error(err);
         });
 }

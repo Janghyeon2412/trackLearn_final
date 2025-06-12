@@ -26,7 +26,7 @@ public class EmailService {
     }
 
     private void send(String to, String subject, String content) {
-        System.out.println("📨 이메일 전송 시도 to = " + to);
+        System.out.println("이메일 전송 시도 to = " + to);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
@@ -35,9 +35,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(content, false);
             mailSender.send(message);
-            log.info("✅ 이메일 전송 완료 to: {}", to);
+            log.info("이메일 전송 완료 to: {}", to);
         } catch (MessagingException e) {
-            log.error("❌ 이메일 전송 실패 to: {}", to, e);
+            log.error("이메일 전송 실패 to: {}", to, e);
         }
     }
 }

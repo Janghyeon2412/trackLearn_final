@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
             container.appendChild(placeholder);
         }
 
-        // 상세보기 버튼 클릭 시 이동
+        // 상세보기 버ㅌ,ㄴ
         const detailButtons = container.querySelectorAll(".btn-detail");
         detailButtons.forEach(btn => {
             btn.addEventListener("click", function () {
@@ -165,16 +165,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("즐겨찾기 토글 실패:", err);
                 alert("즐겨찾기 상태 변경에 실패했습니다.");
 
-                // 실패 시 UI 복원
                 icon.src = isFav ? "/images/star-full.png" : "/images/star-empty.png";
                 icon.setAttribute("data-fav", isFav.toString());
             }
         }
 
-        // 수정 버튼 클릭 시
+        // 수정
         if (e.target.classList.contains("edit-btn")) {
             const goalLogId = e.target.getAttribute("data-goal-log-id");
-            console.log("🧪 goalLogId:", goalLogId);  // 🔥 여기가 핵심
+            console.log("🧪 goalLogId:", goalLogId);
             if (!goalLogId) {
                 alert("수정할 수 없는 일지입니다.");
                 return;
@@ -182,12 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = `/diary/edit/${goalLogId}`;
         }
 
-
-
-
     });
-
-
 
     fetchDiaries();
 });

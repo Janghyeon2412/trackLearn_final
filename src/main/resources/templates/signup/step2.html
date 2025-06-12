@@ -22,7 +22,7 @@
             </div>
             <!-- 중복 에러 메시지 -->
             <p id="nicknameError" class="error-message" style="display:none; color: red; margin-top: 4px;"></p>
-            <!-- Spring Validation 에러 메시지 -->
+
             <p class="error-message" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></p>
         </div>
 

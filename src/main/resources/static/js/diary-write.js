@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let cachedLearningStyles = [];
     let userTone = "SOFT";
 
-    // 🔹 사용자 설정에서 tone 불러오기
     (async () => {
         try {
             const res = await fetch("/api/settings", { credentials: "include" });
@@ -50,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const stars = document.querySelectorAll('.star-rating span');
 
-    // ✅ 작성 모드에서만 실행
+    // 작성 모드에서만
     if (!isEditMode) {
         const todayDate = document.getElementById('today-date');
         if (todayDate) {
@@ -74,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
         }
 
-        // 오늘의 목표 체크박스 렌더링
+        // 오늘의 목표 체크박스
         fetch("/api/diary/today-goals", {
             credentials: "include"
         })
@@ -117,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ✅ 수정 모드 초기값 채우기
+    // 수정 모드 초기값 채우기
     if (isEditMode && diaryId) {
         fetch(`/api/diary/${diaryId}`, {
             credentials: "include"
@@ -145,10 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!container) return;
 
                 const checkedIds = new Set(data.goalLogIds || []);
-                const checkedIdArr = [...checkedIds]; // ✅ 순서 보존용
+                const checkedIdArr = [...checkedIds];
                 const retrospectives = data.retrospectives || [];
 
-                const allLogs = data.allGoalLogs || []; // ← 백엔드에서 내려줘야 함: 전체 GoalLog 리스트 {id, title}
+                const allLogs = data.allGoalLogs || [];
                 container.innerHTML = "";
 
                 allLogs.forEach((log) => {
@@ -179,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    // ✅ 저장 이벤트
+    // 저장
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const title = titleInput?.value.trim();
@@ -195,7 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✅ 프론트엔드 벨리데이션 추가
             if (title.length > 100) {
                 alert("제목은 100자 이내로 입력해주세요.");
                 return;
@@ -246,8 +244,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 for (let r of retrospectives) {
-                    if (r.length > 30) {
-                        alert("각 회고는 최대 30자까지 입력 가능합니다.");
+                    if (r.length > 150) {
+                        alert("각 회고는 최대 150자까지 입력 가능합니다.");
                         return;
                     }
                 }
@@ -278,17 +276,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("서버 오류 발생: " + err.message);
             }
         });
-    } // ✅ 이 괄호가 if(saveBtn)의 끝
+    }
 
 
-    // ✅ 글자 수 카운트
+    // 글자 수 카운트
     if (contentInput && charCountDisplay) {
         contentInput.addEventListener("input", () => {
             charCountDisplay.textContent = `(${contentInput.value.length}자)`;
         });
     }
 
-    // ✅ 별점 표시
+    // 별점 표시
     if (stars.length && satisfactionInput) {
         stars.forEach((star, index) => {
             star.addEventListener('mousemove', (e) => {
@@ -318,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ✅ GPT 피드백 요청 버튼 로직
+    // GPT 피드백 요청 버튼
     const gptBtn = document.getElementById("gptFeedbackBtn");
     const gptResultBox = document.getElementById("gptFeedbackResult");
 
@@ -338,7 +336,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const goals = checkedGoalEls.map(cb => cb.closest(".checkbox-wrap")?.querySelector(".goal-title")?.innerText || "");
             const retrospectives = checkedGoalEls.map(cb => cb.closest(".checkbox-wrap")?.querySelector(".retrospective-input")?.value.trim() || "");
 
-            // ✅ 정확히 ID 기준으로 매핑해서 순서 일치 보장
             const goalDetails = isEditMode
                 ? checkedGoalIds.map(id => {
                     const index = (window.loadedGoalLogIds || []).indexOf(id);

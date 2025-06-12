@@ -1,6 +1,5 @@
 package com.multi.tracklearn.controller;
 
-import com.multi.tracklearn.auth.JwtUserAuthentication;
 import com.multi.tracklearn.domain.User;
 import com.multi.tracklearn.dto.*;
 import com.multi.tracklearn.service.DashboardService;
@@ -93,12 +92,12 @@ public class DashboardController {
     }
 
 
-    // ✅ 공통 메서드
+    // 공통
     private String extractEmail(Authentication authentication) {
         if (authentication == null || authentication.getPrincipal() == null) return null;
         Object principal = authentication.getPrincipal();
         if (principal instanceof User user) {
-            return user.getEmail(); // ✅ 이제 이렇게
+            return user.getEmail();
         }
         return null;
     }

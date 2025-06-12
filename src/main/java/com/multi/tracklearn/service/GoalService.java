@@ -56,7 +56,6 @@ public class GoalService {
 
         goalRepository.save(goal);
 
-        // 일정 생성
         generateGoalLogs(goal, user);
 
     }
@@ -89,7 +88,6 @@ public class GoalService {
 
         } else if (goal.getRepeatType() == Goal.RepeatType.WEEKLY) {
 
-            // ✅ 숫자면 → 주 N회 방식으로 처리 (실제 CUSTOM과 동일한 날짜 분포)
             if (goal.getRepeatValue().matches("\\d+")) {
                 int repeat = Integer.parseInt(goal.getRepeatValue());
                 List<Integer> offsets = getCustomRepeatOffsets(repeat);
@@ -100,7 +98,7 @@ public class GoalService {
                     }
                 }
             } else {
-                // 기존 요일 기반 처리
+                // 기존 요일
                 LocalDate end = start.plusDays(6);
                 List<String> repeatDays = Arrays.stream(goal.getRepeatValue().split(","))
                         .map(String::trim)
@@ -127,8 +125,6 @@ public class GoalService {
 
 
 
-
-    //오늘의 목표 (GoalLog 기반)
     public List<TodayGoalDTO> getTodayGoals(String email) {
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
@@ -210,11 +206,9 @@ public class GoalService {
                 goalUpdateDTO.getLearningStyle()
         );
 
-        // 기존 GoalLog 삭제
         goalLogRepository.deleteAll(goalLogRepository.findByGoal(goal));
         goalLogRepository.flush();
 
-        // 새 GoalLog 생성
         regenerateGoalLogs(goal);
     }
 
@@ -284,11 +278,9 @@ public class GoalService {
             throw new SecurityException("종료 권한이 없습니다.");
         }
 
-        // ✅ 목표 완료 처리
         goal.complete();
         goalRepository.save(goal);
 
-        // ✅ 관련 GoalLog 전부 완료 처리
         List<GoalLog> logs = goalLogRepository.findByGoal(goal);
         for (GoalLog log : logs) {
             log.setIsChecked(true);
@@ -329,11 +321,10 @@ public class GoalService {
         return convertToDTO(goals);
     }
 
-    // GoalService 내부
     private List<GoalListDTO> convertToDTO(List<Goal> goals) {
         return goals.stream()
                 .map(goal -> {
-                    int progress = goal.getIsCompleted() ? 100 : calculateProgress(goal); // ✅ 여기!
+                    int progress = goal.getIsCompleted() ? 100 : calculateProgress(goal);
 
                     String repeatText;
                     switch (goal.getRepeatType()) {
@@ -401,7 +392,7 @@ public class GoalService {
         Goal goal = goalRepository.findByIdAndUser(goalId, user)
                 .orElseThrow(() -> new IllegalArgumentException("해당 목표를 찾을 수 없습니다."));
 
-        goal.softDelete();  // isDeleted = true 로 설정됨
+        goal.softDelete();
     }
 
     @Transactional(readOnly = true)
@@ -414,7 +405,7 @@ public class GoalService {
         return logs.stream()
                 .map(log -> {
                     Goal goal = log.getGoal();
-                    LocalDate goalStartDate = goal.getCreatedValue();  // ✅ 변수명 중복 피함
+                    LocalDate goalStartDate = goal.getCreatedValue();
                     LocalDate goalEndDate = goalStartDate.plusDays(7);
 
                     Optional<Diary> diaryOpt = diaryRepository.findByUserAndGoalLogId(user, log.getId());
@@ -473,9 +464,5 @@ public class GoalService {
                     goal.getEndDate()
             );
         }).toList();
-
-
     }
-
-
 }

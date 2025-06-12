@@ -29,13 +29,11 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
     List<GoalLog> findByUserAndDate(@Param("user") User user, @Param("date") LocalDate date);
 
 
-
-    // 오늘 이후 목표만 조회 (오늘은 제외)
+    // 오늘 이후 목표만 조회
     @Query("SELECT gl FROM GoalLog gl WHERE gl.user = :user AND gl.date > :date AND gl.goal.deleted = false AND gl.goal.isCompleted = false")
     List<GoalLog> findByUserAndDateAfter(@Param("user") User user, @Param("date") LocalDate date);
 
 
-    // 수정 시 GoalLog 삭제 후 재생성
     void deleteByGoal(Goal goal);
 
 
@@ -57,7 +55,6 @@ public interface GoalLogRepository extends JpaRepository<GoalLog, Long> {
     List<GoalLog> findActiveByUserAndDateBetween(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
 
-    // 만약 goalLog.date가 date 타입이면 LocalDate 사용
     @Query("SELECT g FROM GoalLog g WHERE g.date = :date AND g.user.id = :userId AND g.goal.deleted = false")
     List<GoalLog> findByDateAndUserId(@Param("date") LocalDate date, @Param("userId") Long userId);
 

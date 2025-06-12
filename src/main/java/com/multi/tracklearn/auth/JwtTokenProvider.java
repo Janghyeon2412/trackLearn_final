@@ -38,7 +38,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("JWT 검증 실패: " + e.getMessage());
+            System.out.println(e.getMessage());
             return false;
         }
     }

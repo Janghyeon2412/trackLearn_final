@@ -49,7 +49,7 @@ public class MyPageController {
         MyPageInfoDTO dto = new MyPageInfoDTO(
                 user.getNickname(), user.getEmail(), user.getCreatedAt(),
                 diaryCount, totalStudyTime, avgSatisfaction,
-                goalDTOs // ✅ 이제 오류 없음
+                goalDTOs
         );
 
         return ResponseEntity.ok(dto);

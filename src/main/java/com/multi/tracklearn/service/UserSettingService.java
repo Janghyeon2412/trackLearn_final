@@ -14,20 +14,20 @@ public class UserSettingService {
     private final UserSettingRepository userSettingRepository;
     private final UserRepository userRepository;
 
-    // 🔹 사용자 설정 조회
+    // 설정 조회
     public UserSetting getSetting(Long userId) {
         return userSettingRepository.findById(userId)
                 .orElseGet(() -> createDefaultSetting(userId));
     }
 
-    // 🔹 GPT 톤 설정 변경
+    // GPT 톤 변경
     @Transactional
     public void updateTone(Long userId, Tone tone) {
         UserSetting setting = getSetting(userId);
         setting.setTone(tone);
     }
 
-    // 🔹 알림 설정 변경
+    // 알림 설정
     @Transactional
     public void updateNotifications(Long userId, boolean gpt, boolean goalArrival, boolean diaryMissing) {
         UserSetting setting = getSetting(userId);
@@ -36,7 +36,6 @@ public class UserSettingService {
         setting.setDiaryMissingNotify(diaryMissing);
     }
 
-    // 🔹 기본값 생성 (없는 경우 자동 생성)
     @Transactional
     public UserSetting createDefaultSetting(Long userId) {
         User user = userRepository.findById(userId)

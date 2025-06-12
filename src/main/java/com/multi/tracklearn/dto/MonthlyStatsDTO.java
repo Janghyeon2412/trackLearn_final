@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class MonthlyStatsDTO {
-    private List<Integer> dailyStudyTimes; // ex: [0, 20, 60, ...]
+    private List<Integer> dailyStudyTimes;
     private int entryCount;
     private double averageSatisfaction;
     private String bestDay;

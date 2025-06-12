@@ -9,6 +9,6 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 public class GptStatsDTO {
-    private Map<String, Integer> typeCounts;     // cheer, advice, adjust
-    private List<String> recentFeedbacks;        // 최근 피드백 내용 리스트
+    private Map<String, Integer> typeCounts;
+    private List<String> recentFeedbacks;
 }

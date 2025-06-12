@@ -93,7 +93,7 @@
     width: 20px;
     height: 20px;
     cursor: pointer;
-    z-index: 2; /* 혹시 다른 요소에 가려지면 추가 */
+    z-index: 2;
 }
 
 .diary-summary {
@@ -175,7 +175,7 @@
     color: #444;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 6; /* ← 이 줄 추가 */
+    -webkit-line-clamp: 6;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;

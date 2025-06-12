@@ -176,5 +176,5 @@ input[type="text"]:focus {
 }
 
 .password-hint.invalid {
-    color: red; /* 틀렸을 때 빨간색으로 전환 */
+    color: red;
 }

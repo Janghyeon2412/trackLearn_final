@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("accessToken");
 
-
-    // 🔹 설정값 초기화
     try {
         const res = await fetch("/api/settings", {
             headers: { Authorization: `Bearer ${token}` }
@@ -25,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    // 🔹 사용자 정보 불러오기
+    // 사용자 정보
     try {
         const res = await fetch("/api/settings/profile", {
             headers: { Authorization: `Bearer ${token}` }
@@ -39,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("사용자 정보를 불러오지 못했습니다.");
     }
 
-    // 🔹 닉네임 변경
+    // 닉네임 변경
     document.getElementById("updateNicknameBtn").addEventListener("click", async () => {
         const newNickname = document.getElementById("newNickname").value;
         if (!newNickname) return alert("새 닉네임을 입력하세요.");
@@ -61,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 🔹 비밀번호 변경
+    // 비밀번호 변경
     document.getElementById("changePasswordBtn").addEventListener("click", async () => {
         const currentPassword = document.getElementById("currentPassword").value;
         const newPassword = document.getElementById("newPassword").value;
@@ -79,10 +77,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (res.ok) {
             alert("비밀번호가 변경되어 로그아웃됩니다.");
-            // ✅ 로컬 토큰 제거
+
             localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");  // 만약 저장한 경우
-            // ✅ 로그인 페이지로 이동
+            localStorage.removeItem("refreshToken");
+
+            // 로그인 페이지로 이동
             location.href = "/login";
         } else {
             const message = await res.text();
@@ -91,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 
-    // 🔹 GPT 설정 저장 (옵션)
+    // GPT 설정
     document.getElementById("saveGptSettingBtn").addEventListener("click", async () => {
         const selectedTone = document.querySelector('input[name="tone"]:checked')?.value;
         if (!selectedTone) return alert("톤을 선택하세요.");
@@ -109,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         else alert("GPT 설정 저장 실패");
     });
 
-    // 🔹 알림 설정 저장 (옵션)
+    // 알림 설정 저장
     document.getElementById("saveNotificationBtn").addEventListener("click", async () => {
         const gpt = document.getElementById("gptAlarm").checked;
         const daily = document.getElementById("dailyAlarm").checked;
@@ -134,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         else alert("알림 설정 저장 실패");
     });
 
-    // 🔹 계정 탈퇴
+    // 계정 탈퇴
     document.getElementById("deleteAccountLink").addEventListener("click", async (e) => {
         e.preventDefault();
         if (!confirm("정말 탈퇴하시겠습니까?")) return;

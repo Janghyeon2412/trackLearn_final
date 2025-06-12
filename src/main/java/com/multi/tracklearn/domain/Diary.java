@@ -59,13 +59,13 @@ public class Diary {
     @Column(length = 50)
     private String modifiedPerson;
 
-    // ✅ 다중 GoalLog ID 저장 (양방향 아님)
+
     @ElementCollection
     @CollectionTable(name = "diary_goal_logs", joinColumns = @JoinColumn(name = "diary_id"))
     @Column(name = "goal_log_id")
     private List<Long> goalLogIds = new ArrayList<>();
 
-    // ✅ 회고 리스트 저장 (다중 회고)
+
     @ElementCollection
     @CollectionTable(name = "diary_retrospective", joinColumns = @JoinColumn(name = "diary_id"))
     @Column(name = "retrospective", length = 150)  // ← 여기 length만 수정

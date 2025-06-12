@@ -30,7 +30,7 @@ public class DashboardService {
 
 
     public List<TodayGoalDTO> getTodayGoals(String email) {
-        User user = userRepository.findByEmail(email);  // User 반환
+        User user = userRepository.findByEmail(email);
 
         if (user == null) {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
@@ -87,7 +87,7 @@ public class DashboardService {
         LocalDate startDate = LocalDate.now().with(DayOfWeek.MONDAY);
         LocalDate endDate = startDate.plusDays(6);
 
-        // ✅ 이번 주 월~일 범위 계산
+        // 이번 주 월~일 범위 계산
         LocalDate today = LocalDate.now();
         LocalDate monday = today.with(java.time.DayOfWeek.MONDAY);
         LocalDate sunday = monday.plusDays(6);
@@ -143,7 +143,6 @@ public class DashboardService {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         }
 
-        // ✅ 일지당 대표 피드백 1개씩만, 최신순 정렬
         List<Feedback> feedbacks = feedbackRepository.findFirstFeedbacksPerDiary(user.getId());
 
         return feedbacks.stream()
@@ -227,7 +226,7 @@ public class DashboardService {
                     LocalDate date = log.getDate();
                     LocalDate startDate = goal.getCreatedValue();
                     LocalDate endDate = startDate.plusDays(7);
-                    Long diaryId = diaryMap.get(log.getId()); // ✅ 여기가 핵심
+                    Long diaryId = diaryMap.get(log.getId());
 
                     return new CalendarGoalDTO(
                             log.getId(),
@@ -304,7 +303,7 @@ public class DashboardService {
 
         int rate = calculateAchievementRate(user.getId(), start, end);
 
-        // ✅ 월 표시를 yyyy-MM 형식으로 보정
+        // 연도 - 월
         String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
         return new MonthlyStatsDTO(daily, diaries.size(), avg, bestDay, rate, formattedMonth);

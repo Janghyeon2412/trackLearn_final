@@ -38,9 +38,9 @@ public class  SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        "/signup/**",  // 회원가입 페이지 허용
-                        "/css/**",     // css 허용
-                        "/error",     // 오류 페이지 허용
+                        "/signup/**",
+                        "/css/**",
+                        "/error",
                         "/login",
                         "/js/**",
                         "/images/**",
@@ -72,11 +72,11 @@ public class  SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true); // 🔥 반드시 true
-        config.setAllowedOrigins(List.of("http://localhost:8081")); // 프론트 주소
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of("http://localhost:8081"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("*")); // optional
+        config.setExposedHeaders(List.of("*"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

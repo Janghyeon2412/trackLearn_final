@@ -20,7 +20,6 @@
     <section class="form-section">
         <h2>일지 수정</h2>
 
-        <!-- ✅ Hidden input for JS 사용 -->
         <input type="hidden" id="diaryId" th:value="${diaryEdit.diaryId}" />
         <input type="hidden" id="goalLogId" th:value="${diaryEdit.goalLogId}" />
         <input type="hidden" id="editMode" value="true" />
@@ -60,7 +59,6 @@
             <div id="char-count">(0자)</div>
         </div>
 
-        <!-- ✅ 체크박스 + 회고 입력칸을 JS가 그려줌 -->
         <div id="goal-checkbox-list" class="goal-list">
             <p>목표와 회고 데이터를 불러오는 중입니다...</p>
         </div>
@@ -72,13 +70,11 @@
         <label for="tomorrowPlan">내일 보완하고 싶은 점</label>
         <textarea id="tomorrowPlan" rows="2" th:text="${diaryEdit.tomorrowPlan}" ...></textarea>
 
-        <!-- ✅ 기존 버튼 아래에 GPT 피드백 버튼 추가 -->
         <div class="btn-wrap">
             <button id="saveDiaryBtn" class="save-btn">일지 저장</button>
-            <button type="button" id="gptFeedbackBtn" class="gpt-btn">GPT 피드백 요청</button> <!-- ✅ 추가 -->
+            <button type="button" id="gptFeedbackBtn" class="gpt-btn">GPT 피드백 요청</button>
         </div>
 
-        <!-- ✅ GPT 피드백 결과 표시 박스 -->
         <div id="gptFeedbackResult" class="gpt-result-box" style="margin-top: 1.5rem; white-space: pre-wrap;"></div>
 
     </section>

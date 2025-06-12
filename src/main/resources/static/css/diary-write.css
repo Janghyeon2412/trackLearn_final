@@ -81,7 +81,7 @@ textarea {
 
 
 .rating-container {
-    margin: 0; /* 제거 */
+    margin: 0;
 }
 
 .star-rating {
@@ -103,8 +103,8 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem; /* 좁힘 */
-    margin-bottom: 0.5rem; /* 줄임 */
+    gap: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 
@@ -173,7 +173,7 @@ textarea {
 }
 
 .diary-retrospective {
-    white-space: pre-wrap; /* 줄바꿈 유지 */
+    white-space: pre-wrap;
 }
 
 

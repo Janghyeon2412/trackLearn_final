@@ -38,12 +38,12 @@ public class User {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
-    // 추가(탈퇴한 게정 구분)
+    // 추가 --> 탈퇴한 게정 구분
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
 
-    // 추가 (로그인 실패 횟수)
+    // 추가 --> 실패 횟수
     @Column(name = "login_fail_count")
     private Integer loginFailCount = 0;
 

@@ -71,7 +71,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-
-    // 페이지 진입 시 자동 실행 (기본값 날짜로)
     loadBtn.click();
 });

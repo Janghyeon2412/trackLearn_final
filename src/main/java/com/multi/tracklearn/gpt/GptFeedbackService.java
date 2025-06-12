@@ -50,7 +50,6 @@ public class GptFeedbackService {
 
 
     // 프롬프트 생성 메서드
-    // 1. 시그니처에 추가
     public String generatePrompt(
             String title,
             String content,
@@ -61,8 +60,8 @@ public class GptFeedbackService {
             List<String> goalDetails,
             List<String> goalReasons,
             List<String> learningStyles,
-            String difficulty,       // ✅ 추가
-            String tomorrowPlan      // ✅ 추가
+            String difficulty,
+            String tomorrowPlan
     )
     {
         StringBuilder goalReflectionBuilder = new StringBuilder();
@@ -83,47 +82,42 @@ public class GptFeedbackService {
             """, i + 1, goal, retro, detail, reason, style));
         }
 
-// 2. 프롬프트 본문에 반영
         return String.format("""
-다음은 사용자의 학습 일지입니다:
-
-[제목]
-%s
-
-[내용]
-%s
-
-[공부 시간] %d분
-[만족도] %d / 5
-
-[오늘 학습 중 어려웠던 점]
-%s
-
-[내일 보완하고 싶은 점]
-%s
-
-[목표별 정보]
-%s
-
-위 내용을 바탕으로 다음 세 가지 항목을 순차적으로 출력해주세요:
-
-1. 간단한 요약 (1~2줄)
-2. 긍정적인 피드백 또는 격려
-3. 다음 목표나 추천 학습 방향 제안
-
-모든 응답은 반드시 한국어로 작성하고, 각 항목은 번호를 붙여주세요.
-""",
+                        다음은 사용자의 학습 일지입니다:
+                        
+                        [제목]
+                        %s
+                        
+                        [내용]
+                        %s
+                        
+                        [공부 시간] %d분
+                        [만족도] %d / 5
+                        
+                        [오늘 학습 중 어려웠던 점]
+                        %s
+                        
+                        [내일 보완하고 싶은 점]
+                        %s
+                        
+                        [목표별 정보]
+                        %s
+                        
+                        위 내용을 바탕으로 다음 세 가지 항목을 순차적으로 출력해주세요:
+                        
+                        1. 간단한 요약 (1~2줄)
+                        2. 긍정적인 피드백 또는 격려
+                        3. 다음 목표나 추천 학습 방향 제안
+                        
+                        모든 응답은 반드시 한국어로 작성하고, 각 항목은 번호를 붙여주세요.
+                        """,
                 title,
                 content,
                 studyTime,
                 satisfaction,
-                difficulty,          // ⬅ 반영
-                tomorrowPlan,        // ⬅ 반영
+                difficulty,
+                tomorrowPlan,
                 goalReflectionBuilder.toString().trim()
         );
-
-
     }
-
-
 }

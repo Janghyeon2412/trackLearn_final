@@ -46,7 +46,6 @@ public class GoalPageController {
 
         List<CategoryDTO> categories = categoryService.findAll();
 
-        // **5개만 보여주는 부분 수정**
         List<GoalListDTO> goals = goalService.getGoals(email)
                 .stream()
                 .limit(5)
@@ -111,7 +110,7 @@ public class GoalPageController {
         model.addAttribute("startDate", LocalDate.now().minusDays(7));
         model.addAttribute("endDate", LocalDate.now());
 
-        return "goal/goal-status";  // templates/goal/goal-status.html 로 연결
+        return "goal/goal-status";
     }
 
 

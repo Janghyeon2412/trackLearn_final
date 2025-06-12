@@ -54,7 +54,7 @@ public class FeedbackService {
                 .map(opt -> opt.get().getGoal().getLearningStyle())
                 .toList();
 
-        // ✅ 사용자 톤 설정 반영
+        // 톤 설정 반영
         User user = diary.getUser();
         UserSetting setting = userSettingService.getSetting(user.getId());
         Tone tone = setting.getTone();
@@ -73,7 +73,7 @@ public class FeedbackService {
                 diary.getTomorrowPlan()
         );
 
-        // ✅ 톤 기반 GPT 호출
+        // 톤 기반 GPT 호출
         String response = gptFeedbackService.getFeedback(tone.name(), "학습 피드백", prompt);
 
         List<String> sections = Arrays.stream(response.split("\\n\\n"))
@@ -83,7 +83,7 @@ public class FeedbackService {
         for (int i = 0; i < sections.size(); i++) {
             Feedback feedback = new Feedback();
             feedback.setDiary(diary);
-            feedback.setToneType(tone.toFeedbackToneType()); // 💡 enum 변환 메서드 만들면 좋음
+            feedback.setToneType(tone.toFeedbackToneType());
             feedback.setCreatedPerson("GPT");
             feedback.setModifiedPerson("GPT");
 
@@ -106,8 +106,6 @@ public class FeedbackService {
             );
         }
 
-        System.out.println("✅ diary.getUser() = " + user);
-        System.out.println("✅ GPT 알림 설정 상태 = " + setting.getGptFeedbackNotify());
     }
 
 }

@@ -31,7 +31,7 @@ public class GoalLogRescheduler {
         for (GoalLog goalLog : uncompletedLogs) {
             Goal goal = goalLog.getGoal();
 
-            // 이미 완료되었거나 삭제된 목표는 건너뜀
+            // 이미 완료되었거나 삭제된 목표
             if (goal.getIsCompleted() || goal.getDeleted()) continue;
 
             // 남은 날짜 중 빈 날짜 찾기 (이 주에 한정)

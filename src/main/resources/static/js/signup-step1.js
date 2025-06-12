@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (value.length === 0 || isValid) {
             hint.classList.remove("invalid");
         } else {
-            hint.classList.add("invalid"); // 빨간색 전환
+            hint.classList.add("invalid");
         }
     });
 });

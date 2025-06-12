@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <title>메인페이지</title>
@@ -8,13 +8,9 @@
 
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/header.css">
-
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
 
-  <!-- FullCalendar JS -->
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-
-
   <script src="/js/feedback-notify.js"></script>
   <script src="/js/notification.js" defer></script>
   <script src="/js/feedback-notify.js"></script>
@@ -26,7 +22,6 @@
 <header th:replace="fragments/header :: header"></header>
 
 <main>
-  <!-- 오늘의 목표 표시 영역 -->
   <section class="goal-section">
     <h3>오늘의 목표</h3>
     <div id="today-goals" class="goal-list"></div>
@@ -36,12 +31,6 @@
   </section>
 
 
-
-
-
-
-
-  <!-- 주간 통계 -->
   <section id="weekly-stats">
     <h2>주간 학습 통계</h2>
     <canvas id="weekly-chart"></canvas>

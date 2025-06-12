@@ -40,7 +40,7 @@ public class Goal {
     private Boolean isCompleted = false;
 
     
-    //추가
+    //추추추가
     @Column(nullable = false)
     private Boolean deleted = false;
 
@@ -133,7 +133,6 @@ public class Goal {
     }
 
 
-    // Goal 엔티티 내부에 수동 추가
     public void updateProgress(int progress) {
         this.progress = progress;
         this.onUpdate();

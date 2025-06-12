@@ -66,7 +66,7 @@ public class UserController {
     public ResponseEntity<Map<String, String>> login(
             @RequestBody @Valid UserLoginDTO userLoginDTO,
             BindingResult bindingResult,
-            HttpServletResponse response // ✅ 추가
+            HttpServletResponse response
     ) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
@@ -80,25 +80,25 @@ public class UserController {
             String accessToken = jwtTokenProvider.generateToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // ✅ 리프레시 토큰 저장
+            // 리프레시 토큰 저장
             LocalDateTime refreshTokenExpiry = LocalDateTime.now().plusDays(7);
             userTokenService.saveToken(user, refreshToken, refreshTokenExpiry);
 
-            // ✅ accessToken 쿠키 저장
+            // accessToken 쿠키 저장
             Cookie accessCookie = new Cookie("accessToken", accessToken);
             accessCookie.setHttpOnly(true);
             accessCookie.setPath("/");
             accessCookie.setMaxAge(60 * 60 * 2); // 2시간
             response.addCookie(accessCookie);
 
-            // ✅ refreshToken 쿠키 저장
+            // refreshToken 쿠키 저장
             Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
             refreshCookie.setHttpOnly(true);
             refreshCookie.setPath("/");
             refreshCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
             response.addCookie(refreshCookie);
 
-            // ✅ response body에 토큰 포함도 가능
+            // response body에 토큰 포함도 가능
             return ResponseEntity.ok(Map.of(
                     "accessToken", accessToken,
                     "refreshToken", refreshToken

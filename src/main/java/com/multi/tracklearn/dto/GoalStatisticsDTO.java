@@ -15,9 +15,9 @@ public class GoalStatisticsDTO {
     private String repeatType;
     private String repeatText;
 
-    private int totalCount;     // 전체 수행 예정 횟수
-    private int checkedCount;   // 실제 수행(체크)된 횟수
-    private int progressRate;   // 달성률 %
+    private int totalCount;
+    private int checkedCount;
+    private int progressRate;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;

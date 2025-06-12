@@ -28,7 +28,7 @@ public class NotificationScheduler {
     private final EmailService emailService;
     private final UserRepository userRepository;
 
-    @Scheduled(cron = "0 0 10 * * *") // 오전 10시: 오늘 목표 도달 알림
+    @Scheduled(cron = "0 0 10 * * *") // 오전 10시
     public void sendGoalArrivalReminders() {
         LocalDate today = LocalDate.now();
 
@@ -50,7 +50,7 @@ public class NotificationScheduler {
             }
         }
 
-        log.info("✅ 목표 도달 알림 완료: {}", todayGoals.size());
+        log.info("목표 도달 알림 완료: {}", todayGoals.size());
     }
 
     @Scheduled(cron = "0 0 22 * * *")
@@ -76,7 +76,7 @@ public class NotificationScheduler {
             }
         }
 
-        log.info("✅ 일지 미작성 알림 전송 완료");
+        log.info("일지 미작성 알림 전송 완료");
     }
 
 

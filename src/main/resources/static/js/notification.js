@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!button || !dropdown || !list) return;
 
-    // ✅ 전역에서 쓸 수 있도록 dot 업데이트 함수 정의
     window.updateNotificationDot = async function () {
         try {
             const res = await fetch("/api/notifications/unread-count", { credentials: "include" });
@@ -17,14 +16,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 dot.style.display = "none";
             }
         } catch (err) {
-            console.error("🔴 알림 개수 확인 실패", err);
+            console.error("알림 개수 확인 실패", err);
         }
     };
 
-    // ✅ 최초 로드 시 dot 표시 여부 체크
     await window.updateNotificationDot();
 
-    // ✅ 상대 시간 변환 함수
     function formatTimeAgo(dateTimeStr) {
         const date = new Date(dateTimeStr);
         const now = new Date();
@@ -37,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return date.toLocaleDateString("ko-KR");
     }
 
-    // ✅ 클릭 시 드롭다운 토글 + 알림 목록 불러오기
+    // 클릭 시 드롭다운 + 알림 목록
     button.addEventListener("click", async (e) => {
         e.preventDefault();
 
@@ -104,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // ✅ 바깥 클릭 시 드롭다운 닫기
+    // 바깥 클릭 시 드롭다운 닫기
     document.addEventListener("click", (e) => {
         if (!e.target.closest("#notificationButton") && !e.target.closest("#notificationDropdown")) {
             dropdown.style.display = "none";

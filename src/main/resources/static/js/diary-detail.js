@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // ✅ 만족도 별점 표시
+
     const ratingValue = parseFloat(document.getElementById("satisfaction")?.value || "0");
     const starSpans = document.querySelectorAll(".star-rating span");
 
@@ -13,5 +13,4 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ✅ GPT 요청 및 저장 버튼 제거됨 (상세보기에서는 표시만)
 });

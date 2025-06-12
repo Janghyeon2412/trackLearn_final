@@ -36,11 +36,6 @@ public class DiaryController {
 
     private final GoalService goalService;
     private final DiaryService diaryService;
-    private final UserService userService;
-    private final GoalLogRepository goalLogRepository;
-    private final DiaryRepository diaryRepository;
-    private final UserRepository userRepository;
-    private final FeedbackService feedbackService;
 
 
     @GetMapping("/today-goals")
@@ -114,7 +109,7 @@ public class DiaryController {
     }
 
 
-    // ✅ 기존 일지 조회 (수정 폼 채우기용)
+    // 기존 일지 조회
     @GetMapping("/{diaryId}")
     public ResponseEntity<?> getDiary(@PathVariable Long diaryId, Authentication authentication) {
         if (authentication == null || !(authentication instanceof JwtUserAuthentication auth)) {
@@ -129,13 +124,12 @@ public class DiaryController {
         } catch (IllegalArgumentException | AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NoSuchElementException e) {
-            // 💥 이 부분 추가: 일지가 존재하지 않는 경우
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 일지를 찾을 수 없습니다.");
         }
     }
 
 
-    // ✅ 기존 일지 수정
+    // 기존 일지 수정
     @PutMapping("/{diaryId}")
     public ResponseEntity<?> updateDiary(@PathVariable Long diaryId,
                                          @Valid @RequestBody DiaryEditDTO dto,
@@ -189,7 +183,7 @@ public class DiaryController {
         if (exists) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", "이미 오늘 일지를 작성하셨습니다.")); // ✅ JSON 형태로 반환
+                    .body(Map.of("message", "이미 오늘 일지를 작성하셨습니다."));
         }
         return ResponseEntity.ok(Map.of("written", false));
     }
@@ -210,9 +204,9 @@ public class DiaryController {
             Optional<Diary> optionalDiary = diaryService.findDiaryByGoalLogId(goalLogId, email);
             if (optionalDiary.isPresent()) {
                 Long diaryId = optionalDiary.get().getId();
-                return ResponseEntity.ok("/diary/edit/" + diaryId);  // 이미 작성된 경우 -> 수정 페이지
+                return ResponseEntity.ok("/diary/edit/" + diaryId);  // 이미 작성된 경우 --> 수정 페이지
             } else {
-                return ResponseEntity.ok("/diary/write?goalLogId=" + goalLogId);  // 미작성 -> 작성 페이지
+                return ResponseEntity.ok("/diary/write?goalLogId=" + goalLogId);  // 미작성 --> 작성 페이지
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("요청 처리 중 오류 발생: " + e.getMessage());

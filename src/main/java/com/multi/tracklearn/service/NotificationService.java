@@ -33,8 +33,8 @@ public class NotificationService {
     public void markAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다."));
+
         notification.setRead(true);
-        // updatedAt은 @PreUpdate를 사용하지 않았기 때문에 수동 호출
         notification.setUpdatedAt(java.time.LocalDateTime.now());
         notification.setModifiedPerson("system");
     }

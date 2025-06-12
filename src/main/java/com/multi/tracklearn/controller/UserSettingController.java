@@ -21,7 +21,7 @@ public class UserSettingController {
     private final UserSettingService userSettingService;
     private final UserRepository userRepository;
 
-    // 🔹 사용자 설정 전체 조회 (초기 렌더용)
+    // 사용자 설정조회
     @GetMapping
     public ResponseEntity<Map<String, Object>> getSettings(@AuthenticationPrincipal User user) {
         UserSetting setting = userSettingService.getSetting(user.getId());
@@ -36,7 +36,7 @@ public class UserSettingController {
     }
 
 
-    // 🔹 GPT 말투 설정 변경
+    // GPT 말투 변경
     @PatchMapping("/gpt")
     public ResponseEntity<Void> updateTone(@AuthenticationPrincipal User user,
                                            @RequestBody Map<String, String> body) {
@@ -46,7 +46,7 @@ public class UserSettingController {
     }
 
 
-    // 🔹 알림 설정 변경
+    // 알림 변경
     @PatchMapping("/notifications")
     public ResponseEntity<Void> updateNotifications(@AuthenticationPrincipal User user,
                                                     @RequestBody Map<String, Boolean> body) {

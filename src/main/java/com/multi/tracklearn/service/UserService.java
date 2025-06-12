@@ -29,7 +29,6 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserTokenService userTokenService;
 
-    // 인증 코드 저장
     private final Map<String, VerificationCodeData> verificationCodeStore = new ConcurrentHashMap<>();
 
     public String getEmailFromToken(String token) {
@@ -182,7 +181,7 @@ public class UserService {
         }
 
         long now = System.currentTimeMillis();
-        if (now - verificationCodeData.getTimestamp() > 5 * 60 * 1000) { // 5분 초과
+        if (now - verificationCodeData.getTimestamp() > 5 * 60 * 1000) {
             throw new IllegalArgumentException("Expired verification code");
         }
 

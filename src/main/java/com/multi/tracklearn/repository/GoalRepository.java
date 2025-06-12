@@ -16,11 +16,11 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
     @Query("SELECT g FROM Goal g WHERE g.user = :user AND g.deleted = false AND g.createdValue = CURRENT_DATE")
     List<Goal> findTodayGoals(@Param("user") User user);
 
-    // 오늘 이후 목표 (다가오는 일정)
+    // 오늘 이후 목표
     @Query("SELECT g FROM Goal g WHERE g.user = :user AND g.deleted = false AND g.createdValue > CURRENT_DATE ORDER BY g.createdValue ASC")
     List<Goal> findUpcomingGoals(@Param("user") User user);
 
-    // 전체 목표 조회 (삭제되지 않은)
+    // 전체 목표 조회
     @Query("SELECT g FROM Goal g WHERE g.user = :user AND g.deleted = false ORDER BY g.createdValue DESC, g.id DESC")
     List<Goal> findByUser(@Param("user") User user);
 

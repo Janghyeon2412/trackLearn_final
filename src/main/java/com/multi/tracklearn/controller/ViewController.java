@@ -122,7 +122,7 @@ public class ViewController {
         // refresh 토큰 저장
         userTokenService.saveToken(user, refreshToken, LocalDateTime.now().plusDays(7));
 
-        // 토큰을 JS 에서 사용할 수 있도록 쿠키에 전달
+        // 쿠키에 전달
         response.setHeader("Set-Cookie", "refreshToken=" + refreshToken + "; Path=/; HttpOnly; Max-Age=604800");
         response.setHeader("Set-Cookie", "accessToken=" + accessToken + "; Path=/; Max-Age=7200");
 
