@@ -265,9 +265,10 @@ public class ViewController {
     }
 
     @GetMapping("/")
-    public String rootRedirect() {
-        return "redirect:/signup/step1";
+    public String rootRedirect(@AuthenticationPrincipal User user) {
+        return (user != null) ? "redirect:/main" : "redirect:/signup/step1";
     }
+
 
 
 }
