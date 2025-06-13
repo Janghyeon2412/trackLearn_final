@@ -101,12 +101,12 @@ public class GoalPageController {
 
 
     @GetMapping("/status")
-    public String showGoalStatusPage(Authentication authentication, Model model) {
-        String email = null;
-        if (authentication != null && authentication.getPrincipal() instanceof User user) {
-            email = user.getEmail();
+    public String showGoalStatusPage(@AuthenticationPrincipal User user, Model model) {
+        if (user == null) {
+            return "redirect:/login";
         }
-        // 오늘 날짜 기본값 전달
+
+        model.addAttribute("nickname", user.getNickname());
         model.addAttribute("startDate", LocalDate.now().minusDays(7));
         model.addAttribute("endDate", LocalDate.now());
 
